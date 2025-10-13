@@ -10,6 +10,7 @@ export interface ApiRequestOptions {
 @Injectable({
   providedIn: 'root'
 })
+
 export class ApiService {
 private http = inject(HttpClient)
   private baseUrl = environment.supabaseUrl || "/api"

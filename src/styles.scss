@@ -41,13 +41,15 @@ $octacore_frontend-theme: mat.define-light-theme((
 @import 'tailwindcss/utilities';
 
 html, body {
-  height: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0; 
   overflow: hidden;
 }
 
 body {
-  display: flex;
+
    font-family: "Montserrat", sans-serif;
-  flex-direction: column;
+  
 }
 
