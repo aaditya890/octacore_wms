@@ -1,18 +1,16 @@
 import { Component, inject } from '@angular/core';
 import { GatepassService } from '../../services/gatepass.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { AuthService } from '../../../../core/services/auth.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 
 @Component({
-  selector: 'app-gatepass-list',
+  selector: 'app-gatepass-verify',
   standalone: true,
-  imports: [ReactiveFormsModule,FormsModule,CommonModule,RouterLink],
-  templateUrl: './gatepass-list.component.html',
-  styleUrl: './gatepass-list.component.scss'
+  imports: [ReactiveFormsModule,FormsModule,CommonModule],
+  templateUrl: './gatepass-verify.component.html',
+  styleUrl: './gatepass-verify.component.scss'
 })
-export class GatepassListComponent {
+export class GatepassVerifyComponent {
   
 }

@@ -30,23 +30,26 @@ export class InoutService {
     }
   }
 
-  async addTransaction(transaction: Transaction): Promise<boolean> {
-    try {
-      const { data, error } = await this.supabaseService
-        .from('transactions')
-        .insert(transaction)
-        .select()
-        .single();
+ async addTransaction(transaction: Transaction): Promise<boolean> {
+  try {
+    // ⬇️ Strip or nullify created_by to avoid FK failures
+    const safeTx: any = { ...transaction };
+    if (!safeTx.created_by) delete safeTx.created_by; // or: safeTx.created_by = null;
 
-      if (error) throw error;
-      this.notificationService.success('Transaction created successfully');
-      return true;
-    } catch (error) {
-      console.error('Error creating transaction:', error);
-      this.notificationService.error('Failed to create transaction');
-      return false;
-    }
+    const { error } = await this.supabaseService
+      .from('transactions')
+      .insert(safeTx);
+
+    if (error) throw error;
+    this.notificationService.success('Transaction created successfully');
+    return true;
+  } catch (error) {
+    console.error('Error creating transaction:', error);
+    this.notificationService.error('Failed to create transaction');
+    return false;
   }
+}
+
 
   async getTransactionSummary(date_from?: string, date_to?: string): Promise<TransactionSummary> {
     try {

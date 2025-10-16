@@ -33,14 +33,13 @@ export class InventoryAddComponent {
 
   constructor() {
     this.inventoryForm = this.fb.group({
-      item_code: ["", [Validators.required, Validators.minLength(3)]],
+      // 🔹 Removed item_code
       item_name: ["", [Validators.required, Validators.minLength(3)]],
       description: [""],
       category: ["", Validators.required],
       unit: ["", Validators.required],
       quantity: [0, [Validators.required, Validators.min(0)]],
-      min_quantity: [0, [Validators.required, Validators.min(0)]],
-      max_quantity: [1000],
+      // 🔹 Removed min_quantity & max_quantity
       unit_price: [0, [Validators.required, Validators.min(0)]],
       status: ["active", Validators.required],
       location: [""],

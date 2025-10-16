@@ -4,6 +4,8 @@ import { IndentListComponent } from './components/indent-list/indent-list.compon
 import { IndentCreateComponent } from './components/indent-create/indent-create.component';
 
 export const purchaseIndentRoutes: Routes = [
-  { path: '', component: IndentListComponent },
-  { path: 'create', component: IndentCreateComponent }
+ { path: '', redirectTo: 'list', pathMatch: 'full' },
+{ path: 'list', loadComponent: () => import('./components/indent-list/indent-list.component').then(m => m.IndentListComponent) },
+{ path: 'create', loadComponent: () => import('./components/indent-create/indent-create.component').then(m => m.IndentCreateComponent) },
+
 ];

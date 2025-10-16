@@ -84,7 +84,7 @@ private async restoreSession() {
           email: data.user.email!,
           first_name: data.user.user_metadata?.["first_name"] || "",
           last_name: data.user.user_metadata?.["last_name"] || "",
-          role: "admin",
+          role: "staff",
           status: "active",
         }
 
@@ -132,12 +132,11 @@ private async restoreSession() {
           email: email,
           full_name: first_name,
           department: department,
-          role: "admin",
+          role: "staff",
           is_active: true,
         }
 
         await this.supabaseService.from("users").insert(newUser)
-
         this.notificationService.success("Registration successful! Please check your email to verify your account.")
         return { success: true, message: "Registration successful! Please login." }
       }

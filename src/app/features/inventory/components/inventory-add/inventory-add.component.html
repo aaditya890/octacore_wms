@@ -1,112 +1,114 @@
 <div class="min-h-screen bg-gray-50 px-8 py-10">
   <div class="max-w-5xl mx-auto space-y-8">
     <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-extrabold text-black mb-1">
+    <div class="border-b pb-3">
+      <h1 class="text-2xl font-extrabold text-gray-900">
         {{ isEditMode ? 'Edit Inventory Item' : 'Add New Inventory Item' }}
       </h1>
       <p class="text-gray-600 text-sm">
-        {{ isEditMode ? 'Update item details' : 'Enter item details to add a new record' }}
+        {{ isEditMode ? 'Update existing item details' : 'Fill out the form below to add a new item' }}
       </p>
     </div>
 
-    <!-- Form -->
-    <form [formGroup]="inventoryForm" (ngSubmit)="onSubmit()" class="bg-white border border-gray-200 rounded-xl p-6 space-y-8">
-
-      <!-- Basic Info -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-          <label class="block text-sm font-semibold text-gray-800 mb-1">Item Code *</label>
-          <input
-            formControlName="item_code"
-            type="text"
-            placeholder="e.g., ITM-001"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black placeholder-gray-400"
-          />
-        </div>
-
+    <!-- FORM -->
+    <form
+      [formGroup]="inventoryForm"
+      (ngSubmit)="onSubmit()"
+      class="bg-white border border-gray-200 rounded-xl p-8 shadow-sm space-y-6"
+    >
+      <!-- Row 1 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-semibold text-gray-800 mb-1">Item Name *</label>
           <input
             formControlName="item_name"
             type="text"
             placeholder="e.g., Steel Rod"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black placeholder-gray-400"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black focus:outline-none"
           />
         </div>
-      </div>
 
-      <!-- Category & Unit -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <label class="block text-sm font-semibold text-gray-800 mb-1">Category *</label>
           <select
             formControlName="category"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-black focus:border-black"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-black focus:outline-none"
           >
             <option value="">Select Category</option>
             <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
           </select>
         </div>
+      </div>
 
+      <!-- Row 2 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-semibold text-gray-800 mb-1">Unit *</label>
           <select
             formControlName="unit"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-black focus:border-black"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-black focus:outline-none"
           >
             <option value="">Select Unit</option>
             <option *ngFor="let u of units" [value]="u">{{ u }}</option>
           </select>
         </div>
-      </div>
 
-      <!-- Quantity & Limits -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div>
           <label class="block text-sm font-semibold text-gray-800 mb-1">Quantity *</label>
           <input
             formControlName="quantity"
             type="number"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-gray-800 mb-1">Min Qty *</label>
-          <input
-            formControlName="min_quantity"
-            type="number"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-gray-800 mb-1">Max Qty</label>
-          <input
-            formControlName="max_quantity"
-            type="number"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black"
+            min="0"
+            placeholder="0"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black focus:outline-none"
           />
         </div>
       </div>
 
-      <!-- Price & Status -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <!-- Row 3 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-semibold text-gray-800 mb-1">Unit Price (₹) *</label>
           <input
             formControlName="unit_price"
             type="number"
             step="0.01"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black"
+            placeholder="Enter price"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black focus:outline-none"
           />
         </div>
+
         <div>
           <label class="block text-sm font-semibold text-gray-800 mb-1">Status *</label>
           <select
             formControlName="status"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-black focus:border-black"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-black focus:outline-none"
           >
             <option *ngFor="let s of statuses" [value]="s">{{ s | titlecase }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 4 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-800 mb-1">Location</label>
+          <input
+            formControlName="location"
+            type="text"
+            placeholder="e.g., Warehouse A - Rack 3"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-800 mb-1">Supplier</label>
+          <select
+            formControlName="supplier"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white focus:ring-2 focus:ring-black focus:outline-none"
+          >
+            <option value="">Select Supplier</option>
+            <option *ngFor="let s of suppliers" [value]="s">{{ s }}</option>
           </select>
         </div>
       </div>
@@ -118,35 +120,12 @@
           formControlName="description"
           rows="2"
           placeholder="Short item description..."
-          class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black focus:outline-none"
         ></textarea>
       </div>
 
-      <!-- Location & Supplier -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-          <label class="block text-sm font-semibold text-gray-800 mb-1">Location</label>
-          <input
-            formControlName="location"
-            type="text"
-            placeholder="e.g., Warehouse A - Rack 3"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-gray-800 mb-1">Supplier</label>
-          <select
-            formControlName="supplier"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-black focus:border-black"
-          >
-            <option value="">Select Supplier</option>
-            <option *ngFor="let s of suppliers" [value]="s">{{ s }}</option>
-          </select>
-        </div>
-      </div>
-
       <!-- Buttons -->
-      <div class="flex justify-end gap-3 pt-3">
+      <div class="flex justify-end gap-4 pt-4 border-t">
         <button
           type="button"
           (click)="onCancel()"
@@ -157,7 +136,7 @@
         <button
           type="submit"
           [disabled]="isLoading"
-          class="px-5 py-2.5 bg-black border border-black rounded-md font-semibold text-white hover:bg-white hover:text-black transition-all"
+          class="px-6 py-2.5 bg-black text-white rounded-md font-semibold border border-black hover:bg-white hover:text-black transition-all"
         >
           {{ isEditMode ? 'Update Item' : 'Add Item' }}
         </button>

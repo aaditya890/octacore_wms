@@ -7,6 +7,7 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { InventoryService } from '../../../inventory/services/inventory.service';
+import { AppRoutes } from '../../../../core/models/app.routes.constant';
 
 @Component({
   selector: 'app-in-out-transactions',
@@ -21,10 +22,10 @@ export class InOutTransactionsComponent {
   private inventoryService = inject(InventoryService);
   private router = inject(Router);
 
-  displayedColumns = [
+ displayedColumns = [
   'sr_no',
   'transaction_type',
-  'item_name',
+  'item',  
   'quantity',
   'unit',
   'unit_price',
@@ -123,11 +124,11 @@ async loadTransactions(event?: PageEvent) {
   }
 
   addInward() {
-    this.router.navigate(['/inwards-outwards/inwards']);
+      this.router.navigate(["/", AppRoutes.INOUT, AppRoutes.INWARDS]);
   }
 
   addOutward() {
-    this.router.navigate(['/inwards-outwards/outwards']);
+    this.router.navigate(["/", AppRoutes.INOUT, AppRoutes.OUTWARDS]);
   }
 
   async deleteTransaction(transaction: any) {
@@ -153,5 +154,17 @@ async loadTransactions(event?: PageEvent) {
     this.loading = false;
   }
 }
+
+
+extractItemName(notes: string): string {
+  if (!notes) return '';
+  // agar "Item:" likha hai to extract karo
+  const match = notes.match(/Item:\s*(.*)/i);
+  if (match && match[1]) return match[1].trim();
+  
+  // warna direct first 20 chars lo as fallback (for manual entries)
+  return notes.trim().split('\n')[0].slice(0, 30);
+}
+
 
 }

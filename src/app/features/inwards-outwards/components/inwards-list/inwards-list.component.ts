@@ -7,6 +7,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { InoutService } from '../../services/inout.service';
 import { Transaction } from '../../../../core/models/transaction.model';
+import { AppRoutes } from '../../../../core/models/app.routes.constant';
 
 @Component({
   selector: 'app-inwards-list',
@@ -28,7 +29,7 @@ export class InwardsListComponent {
   isNewItem = false;
   inwardForm!: FormGroup;
   filteredItems: any[] = [];
-selectedItemName: string = '';
+  selectedItemName: string = '';
 
   constructor() {
     this.initForm();
@@ -46,7 +47,11 @@ selectedItemName: string = '';
       unit: ['', Validators.required],
       unit_price: [0],
       party_name: ['', Validators.required],
-      invoice_number: ['', Validators.required],
+      // ✅ Invoice alphanumeric only
+      invoice_number: [
+        '',
+        [Validators.required, Validators.pattern(/^[a-zA-Z0-9 ]+$/)],
+      ],
       transaction_date: [new Date().toISOString().split('T')[0]],
       notes: [''],
     });
@@ -62,72 +67,75 @@ selectedItemName: string = '';
 
   toggleItemMode() {
     this.isNewItem = !this.isNewItem;
-    this.inwardForm.patchValue({ item_id: null });
-  }
-
-  onItemChange(event: any) {
-    const id = event.target.value;
-    const item = this.items.find((i) => i.id === id);
-    if (item) {
-      this.inwardForm.patchValue({
-        unit: item.unit,
-        unit_price: item.unit_price,
-        notes: `Category: ${item.category}, Current Qty: ${item.quantity}`,
-      });
-    }
-  }
-
-  async saveInwardEntry() {
-    if (this.inwardForm.invalid) {
-      this.notification.error('Please fill all required fields.');
-      return;
-    }
-
-    const f = this.inwardForm.value;
-    const total = (f.quantity || 0) * (f.unit_price || 0);
-
-    const newTransaction: Transaction = {
-      transaction_number: `IN-${Date.now()}`,
-      transaction_type: 'inward',
-      item_id: f.item_id || null,
-      quantity: f.quantity,
-      unit_price: f.unit_price,
-      total_amount: total,
-      reference_type: 'manual',
-      from_location: null,
-      to_location: 'Main Warehouse',
-      party_name: f.party_name,
-      invoice_number: f.invoice_number,
-      notes: f.notes,
-      created_by: this.currentUser?.id || null,
-      created_at: new Date().toISOString(),
-    };
-
-    const success = await this.inoutService.addTransaction(newTransaction);
-
-    if (success) {
-      await this.inoutService.syncInventoryStock(newTransaction);
-      this.router.navigate(['/inwards-outwards']);
-    }
+    this.filteredItems = [];
+    this.selectedItemName = '';
+    this.inwardForm.patchValue({
+      item_id: null,
+      unit: '',
+      unit_price: 0,
+      notes: '',
+    });
   }
 
   onItemInput(event: any) {
-  const value = event.target.value.toLowerCase();
-  this.filteredItems = this.items.filter((i) =>
-    i.item_name.toLowerCase().includes(value)
-  );
+    const value = event.target.value.toLowerCase();
+    this.filteredItems = this.items.filter((i) =>
+      i.item_name.toLowerCase().includes(value)
+    );
+  }
+
+  selectItem(item: any) {
+    this.filteredItems = [];
+    this.selectedItemName = item.item_name;
+    this.inwardForm.patchValue({
+      item_id: item.id,
+      unit: item.unit,
+      unit_price: item.unit_price,
+      notes: `Category: ${item.category}, Current Qty: ${item.quantity}`,
+    });
+  }
+
+async saveInwardEntry() {
+  if (this.inwardForm.invalid) {
+    this.notification.error('Please fill all required fields.');
+    return;
+  }
+
+  const f = this.inwardForm.value;
+  const total = (f.quantity || 0) * (f.unit_price || 0);
+
+  // 🟢 Handle name properly
+  const itemName =
+    this.isNewItem && f.notes
+      ? f.notes.trim() // for new item (typed manually)
+      : this.selectedItemName || '-'; // for existing
+
+  const newTransaction: Transaction = {
+    transaction_number: `IN-${Date.now()}`,
+    transaction_type: 'inward',
+    item_id: this.isNewItem ? null : f.item_id,
+    quantity: f.quantity,
+    unit_price: f.unit_price,
+    total_amount: total,
+    reference_type: 'manual',
+    from_location: null,
+    to_location: 'Main Warehouse',
+    party_name: f.party_name,
+    invoice_number: f.invoice_number,
+    // 🟢 Save readable item name in notes or extra field
+    notes: `Item: ${itemName}\n${f.notes || ''}`,
+    created_by: null,
+    created_at: new Date().toISOString(),
+  };
+
+  const success = await this.inoutService.addTransaction(newTransaction);
+
+  if (success) {
+    await this.inoutService.syncInventoryStock(newTransaction);
+    this.router.navigate(["/", AppRoutes.INOUT]);
+  }
 }
 
-selectItem(item: any) {
-  this.filteredItems = [];
-  this.selectedItemName = item.item_name;
 
-  // Bind the item id to form
-  this.inwardForm.patchValue({
-    item_id: item.id,
-    unit: item.unit,
-    unit_price: item.unit_price,
-    notes: `Category: ${item.category}, Current Qty: ${item.quantity}`,
-  });
-}
+
 }

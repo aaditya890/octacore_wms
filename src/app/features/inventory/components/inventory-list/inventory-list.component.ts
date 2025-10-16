@@ -93,12 +93,15 @@ export class InventoryListComponent {
 
 
 
-  openDetailDialog(item: InventoryItem) {
-    this.dialog.open(InventoryDetailComponent, {
-      data: item,
-      width: '550px',
-      panelClass: 'inventory-detail-dialog'
-    });
+  openDetailDialog(item: InventoryItem,index:number) {
+  this.dialog.open(InventoryDetailComponent, {
+    data: {
+      ...item,
+      serialNumber: index + 1
+    },
+    width: '520px',
+    panelClass: 'custom-dialog'
+  });
   }
   closeDetailDialog() {
     this.isDetailDialogOpen = false

@@ -7,6 +7,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Transaction } from '../../../../core/models/transaction.model';
+import { AppRoutes } from '../../../../core/models/app.routes.constant';
 
 @Component({
   selector: 'app-outwards-list',
@@ -104,7 +105,7 @@ export class OutwardsListComponent {
 
     if (success) {
       await this.inoutService.syncInventoryStock(newTransaction);
-      this.router.navigate(['/inwards-outwards']);
+      this.router.navigate(['/', AppRoutes.INOUT, AppRoutes.OUTWARDS]);
     }
   }
 

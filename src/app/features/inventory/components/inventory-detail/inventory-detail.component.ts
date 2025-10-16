@@ -14,6 +14,6 @@ export class InventoryDetailComponent {
 
      constructor(
     public dialogRef: MatDialogRef<InventoryListComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: InventoryItem
+    @Inject(MAT_DIALOG_DATA) public data: any
   ) {}
 } 

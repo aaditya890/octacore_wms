@@ -13,8 +13,8 @@ export interface Transaction {
   party_name?: string;
   invoice_number?: string;
   notes?: string;
-  created_by?: string;
-  created_at?: string;
+  created_by?: any;
+  created_at?: any;
 }
 
 

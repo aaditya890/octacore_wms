@@ -1,97 +1,67 @@
-import { inject, Injectable } from '@angular/core';
-import { GatePass, GatePassFilter } from '../../../core/models/gatepass.model';
+import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { GatePass, GatePassItem } from '../../../core/models/gatepass.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+
+@Injectable({ providedIn: 'root' })
 export class GatepassService {
- private supabaseService = inject(SupabaseService)
-  private notificationService = inject(NotificationService)
+  private sb = inject(SupabaseService);
+  private notify = inject(NotificationService);
 
-  async getGatePassList(filter?: GatePassFilter): Promise<GatePass[]> {
-    try {
-      let query = this.supabaseService.from("gate_passes").select("*")
+  // Auto generate pass number like GP-2025-0001
+  private async generatePassNumber(): Promise<string> {
+    const year = new Date().getFullYear();
+    const { count, error } = await this.sb.client
+      .from('gate_passes')
+      .select('*', { count: 'exact', head: true });
 
-      if (filter?.pass_type) {
-        query = query.eq("pass_type", filter.pass_type)
-      }
-
-      if (filter?.status) {
-        query = query.eq("status", filter.status)
-      }
-
-      if (filter?.date_from) {
-        query = query.gte("date", filter.date_from.toString())
-      }
-
-      if (filter?.date_to) {
-        query = query.lte("date", filter.date_to.toString())
-      }
-
-      if (filter?.search_term) {
-        query = query.or(`gate_pass_number.ilike.%${filter.search_term}%,vehicle_number.ilike.%${filter.search_term}%`)
-      }
-
-      const { data, error } = await query.order("date", { ascending: false })
-
-      if (error) {
-        this.notificationService.error("Failed to fetch gate passes")
-        throw error
-      }
-
-      return data || []
-    } catch (error) {
-      console.error("[v0] Error fetching gate passes:", error)
-      return []
-    }
+    if (error) throw error;
+    const newNumber = (count || 0) + 1;
+    return `GP-${year}-${String(newNumber).padStart(4, '0')}`;
   }
 
-  async addGatePass(gatePass: GatePass): Promise<boolean> {
+  // Create gate pass with optional items
+  async createGatePass(gatePass: GatePass, items: GatePassItem[] = []) {
     try {
-      const { data, error } = await this.supabaseService.from("gate_passes").insert(gatePass).select().single()
+      const pass_number = await this.generatePassNumber();
 
-      if (error) {
-        this.notificationService.error("Failed to create gate pass")
-        throw error
-      }
+      const { data: user } = await this.sb.client.auth.getUser();
+      const created_by = user?.user?.id ?? null;
 
-      this.notificationService.success("Gate pass created successfully")
-      return true
-    } catch (error) {
-      console.error("[v0] Error creating gate pass:", error)
-      return false
-    }
-  }
+      const payload: GatePass = {
+        ...gatePass,
+        pass_number,
+        status: 'pending',
+        created_by: created_by ?? undefined,
+      };
 
-  async updateGatePass(id: string, gatePass: Partial<GatePass>): Promise<boolean> {
-    try {
-      const { data, error } = await this.supabaseService
-        .from("gate_passes")
-        .update(gatePass)
-        .eq("id", id)
+      const { data: inserted, error } = await this.sb.client
+        .from('gate_passes')
+        .insert([payload])
         .select()
-        .single()
+        .single();
 
-      if (error) {
-        this.notificationService.error("Failed to update gate pass")
-        throw error
+      if (error) throw error;
+
+      if (items.length) {
+        const mapped = items.map((i) => ({
+          ...i,
+          gate_pass_id: inserted.id,
+          returned_quantity: i.returned_quantity ?? 0,
+        }));
+        const { error: itemError } = await this.sb.client
+          .from('gate_pass_items')
+          .insert(mapped);
+        if (itemError) throw itemError;
       }
 
-      this.notificationService.success("Gate pass updated successfully")
-      return true
-    } catch (error) {
-      console.error("[v0] Error updating gate pass:", error)
-      return false
+      this.notify.success(`Gate Pass created: ${inserted.pass_number}`);
+      return inserted;
+    } catch (err: any) {
+      this.notify.error(err.message || 'Error creating gate pass');
+      console.error('createGatePass error:', err);
+      return null;
     }
-  }
-
-  async approveGatePass(id: string, approved_by: string): Promise<boolean> {
-    return this.updateGatePass(id, { status: "approved", approved_by })
-  }
-
-  async rejectGatePass(id: string): Promise<boolean> {
-    return this.updateGatePass(id, { status: "rejected" })
   }
 }

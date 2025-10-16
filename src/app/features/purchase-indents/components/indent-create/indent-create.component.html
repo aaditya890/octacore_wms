@@ -1,1 +1,78 @@
-<p>indent-create works!</p>
+<div class="min-h-screen bg-gray-50 px-8 py-10">
+  <div class="max-w-6xl mx-auto space-y-10">
+    <!-- Header -->
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-1">Create Purchase Indent</h1>
+      <p class="text-gray-600">Submit a new material or purchase request</p>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-10 bg-white p-8 border border-gray-300 rounded-xl shadow-sm">
+      <!-- Basic Info -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div>
+          <label class="block text-sm font-semibold mb-1">Title</label>
+          <input formControlName="title" type="text" class="w-full border border-gray-400 rounded-md p-2 focus:ring-1 focus:ring-black focus:outline-none" placeholder="Indent title" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold mb-1">Department<span class="text-red-600">*</span></label>
+          <input formControlName="department" type="text" class="w-full border border-gray-400 rounded-md p-2 bg-gray-100" readonly />
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold mb-1">Priority<span class="text-red-600">*</span></label>
+          <select formControlName="priority" class="w-full border border-gray-400 rounded-md p-2">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold mb-1">Required Date<span class="text-red-600">*</span></label>
+          <input formControlName="required_date" type="date" class="w-full border border-gray-400 rounded-md p-2" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold mb-1">Requested By</label>
+          <input type="text" [value]="currentUser?.full_name" class="w-full border border-gray-400 rounded-md p-2 bg-gray-100" readonly />
+        </div>
+
+        <div class="lg:col-span-3">
+          <label class="block text-sm font-semibold mb-1">Notes</label>
+          <textarea formControlName="notes" rows="3" class="w-full border border-gray-400 rounded-md p-2"></textarea>
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div class="border border-gray-300 rounded-xl bg-gray-50">
+        <div class="flex justify-between items-center border-b border-gray-300 px-4 py-3">
+          <h2 class="font-semibold text-gray-800">Items Required</h2>
+          <button type="button" (click)="addItemRow()" class="bg-black text-white px-3 py-1.5 text-sm rounded-md hover:bg-gray-800 transition">
+            + Add Item
+          </button>
+        </div>
+
+        <div formArrayName="items" class="divide-y divide-gray-300">
+          <div *ngFor="let row of itemsFA.controls; let i = index" [formGroupName]="i" class="grid grid-cols-12 gap-3 p-4 items-center bg-white hover:bg-gray-50">
+            <input formControlName="item_name" type="text" class="col-span-3 border border-gray-400 rounded-md p-2" placeholder="Item name *" />
+            <input formControlName="description" type="text" class="col-span-3 border border-gray-400 rounded-md p-2" placeholder="Description" />
+            <input formControlName="quantity" type="number" min="1" class="col-span-2 border border-gray-400 rounded-md p-2" placeholder="Qty *" />
+            <input formControlName="unit" type="text" class="col-span-2 border border-gray-400 rounded-md p-2" placeholder="Unit *" />
+            <input formControlName="estimated_price" type="number" step="0.01" class="col-span-1 border border-gray-400 rounded-md p-2" placeholder="Price" />
+            <button type="button" (click)="removeItemRow(i)" class="col-span-1 text-red-600 hover:text-red-800">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="flex justify-end">
+        <button type="submit" [disabled]="isSubmitting" class="bg-black text-white px-5 py-2 font-semibold rounded-md hover:bg-gray-800 transition">
+          {{ isSubmitting ? 'Saving...' : 'Submit Indent' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

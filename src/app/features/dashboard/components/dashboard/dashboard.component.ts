@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { InventoryService } from '../../../inventory/services/inventory.service';
 import { AppRoutes } from '../../../../core/models/app.routes.constant';
 import { InventoryItem } from '../../../../core/models/inventory.model';
-import { AuthService } from '../../../../core/services/auth.service';  // ✅ added
+import { AuthService } from '../../../../core/services/auth.service';
 import { InoutService } from '../../../inwards-outwards/services/inout.service';
 
 interface DashboardStats {
@@ -33,11 +33,12 @@ interface QuickAction {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
+
 export class DashboardComponent {
   private inventoryService = inject(InventoryService);
-  private inoutService = inject(InoutService);  // 🔹 injected
+  private inoutService = inject(InoutService);
   private router = inject(Router);
-  private authService = inject(AuthService); // ✅ added
+  private authService = inject(AuthService);
   recentTransactions: any[] = [];
 
   readonly AppRoutes = AppRoutes;
@@ -85,7 +86,7 @@ export class DashboardComponent {
     {
       title: 'Gate Pass',
       icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
-      route: ['/', AppRoutes.GATE_PASS],
+      route: ['/'],
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
     },
@@ -171,10 +172,8 @@ export class DashboardComponent {
     }
   }
 
-
   navigateTo(route: string[]) {
     this.router.navigate(route);
   }
-
 
 }

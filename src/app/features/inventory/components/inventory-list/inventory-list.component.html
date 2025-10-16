@@ -80,7 +80,7 @@
         <table class="min-w-full border-separate border-spacing-y-1 whitespace-nowrap">
           <thead>
             <tr class="bg-gray-100 text-gray-700 text-sm uppercase">
-              <th class="px-6 py-3 text-left font-semibold">Code</th>
+              <th class="px-6 py-3 text-center font-semibold">S.No</th>
               <th class="px-6 py-3 text-left font-semibold">Item</th>
               <th class="px-6 py-3 text-left font-semibold">Category</th>
               <th class="px-6 py-3 text-left font-semibold">Qty</th>
@@ -95,10 +95,8 @@
           <tbody>
             <tr *ngFor="let item of filteredItems; let i = index"
               class="bg-white hover:bg-gray-50 border-b border-gray-100 transition">
-              <td class="px-6 py-3 text-sm font-mono text-gray-600">
-                {{ item.item_code }}
-              </td>
-              <td (click)="openDetailDialog(item)"
+              <td class="text-center">{{ i + 1 }}</td>
+              <td (click)="openDetailDialog(item,i)"
                 class="px-6 py-3 text-sm font-semibold text-black cursor-pointer hover:underline">
                 {{ item.item_name }}
               </td>

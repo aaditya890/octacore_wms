@@ -1,1 +1,184 @@
-<p>indent-list works!</p>
+<div class="min-h-screen bg-gray-50 px-6 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Purchase Indents</h1>
+            <p class="text-gray-600 text-sm">View, manage, and approve purchase requests</p>
+        </div>
+
+        <button
+            class="bg-black text-white px-5 py-2 font-semibold border-2 border-black rounded-lg shadow-[4px_4px_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition"
+            routerLink="/purchase-indents/create">
+            + Create Indent
+        </button>
+    </div>
+
+    <!-- Status Filter Chips -->
+    <div class="flex flex-wrap gap-3 mb-6">
+        <button *ngFor="let s of ['all','pending','approved','rejected','completed']"
+            (click)="status = s; loadIndents()"
+            class="px-4 py-1.5 border-2 border-black font-semibold rounded-full shadow-[2px_2px_0_rgba(0,0,0,1)] capitalize"
+            [ngClass]="{
+        'bg-black text-white': status === s,
+        'bg-white text-black hover:bg-gray-100': status !== s
+      }">
+            {{ s }}
+        </button>
+    </div>
+
+    <!-- Loader / Empty -->
+    <div *ngIf="isLoading" class="text-center py-10 text-gray-600">Loading...</div>
+    <div *ngIf="!isLoading && indents.length === 0" class="text-center py-10 text-gray-600">
+        No indents found.
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!isLoading && indents.length > 0"
+        class="bg-white border-2 border-black rounded-xl shadow-[5px_5px_0_rgba(0,0,0,1)] overflow-hidden">
+        <table class="w-full text-sm border-collapse">
+            <thead class="bg-gray-100 border-b-2 border-black">
+                <tr>
+                    <th class="p-3 text-left">S.No</th>
+                    <th class="p-3 text-left">Indent No</th>
+                    <th class="p-3 text-left">Department</th>
+                    <th class="p-3 text-left">Priority</th>
+                    <th class="p-3 text-left">Status</th>
+                    <th class="p-3 text-left">Required Date</th>
+                    <th class="p-3 text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let indent of indents; let i = index" class="border-b border-gray-300 hover:bg-gray-50">
+                    <td class="p-3 font-semibold">{{ i + 1 }}</td>
+                    <td class="p-3">{{ indent.indent_number }}</td>
+                    <td class="p-3">{{ indent.department }}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full border-2" [ngClass]="{
+                'border-green-600 text-green-700 bg-green-100': indent.priority === 'Low',
+                'border-yellow-500 text-yellow-600 bg-yellow-100': indent.priority === 'Medium',
+                'border-orange-500 text-orange-600 bg-orange-100': indent.priority === 'High',
+                'border-red-600 text-red-700 bg-red-100': indent.priority === 'Urgent'
+              }">
+                            {{ indent.priority }}
+                        </span>
+                    </td>
+
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full border-2 capitalize" [ngClass]="{
+                'border-gray-500 text-gray-700 bg-gray-100': indent.status === 'pending',
+                'border-green-600 text-green-700 bg-green-100': indent.status === 'approved',
+                'border-red-600 text-red-700 bg-red-100': indent.status === 'rejected',
+                'border-blue-600 text-blue-700 bg-blue-100': indent.status === 'completed'
+              }">
+                            {{ indent.status }}
+                        </span>
+                    </td>
+                    <td class="p-3">{{ indent.required_date | date }}</td>
+
+                    <td class="p-3 text-center">
+                        <div class="flex justify-center items-center gap-3">
+                            <!-- View Button -->
+                            <button (click)="viewIndent(indent.id)"
+                                class="px-4 py-1.5 border border-black text-black rounded-md font-semibold text-sm hover:bg-gray-100 transition">
+                                View
+                            </button>
+
+                            <!-- Delete Button (Admin only) -->
+                            <button *ngIf="currentUser?.role?.toLowerCase() === 'admin'"
+                                (click)="confirmDelete(indent.id)"
+                                class="px-4 py-1.5 border border-red-600 text-red-600 rounded-md font-semibold text-sm hover:bg-red-50 transition">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+
+
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- MODAL -->
+    <div *ngIf="selectedIndent" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div
+            class="bg-white border-2 border-black rounded-xl p-6 max-w-3xl w-full shadow-[6px_6px_0_rgba(0,0,0,1)] relative">
+            <button class="absolute top-3 right-3 text-xl font-bold" (click)="closeDetails()">×</button>
+
+            <h2 class="text-2xl font-bold mb-4">Indent Details</h2>
+
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <p><b>Indent No:</b> {{ selectedIndent.indent_number }}</p>
+                <p><b>Created At:</b> {{ selectedIndent.created_at | date:'dd MMM yyyy' }}</p>
+                <p><b>Department:</b> {{ selectedIndent.department }}</p>
+                <p><b>Priority:</b> {{ selectedIndent.priority }}</p>
+                <p><b>Status:</b> {{ selectedIndent.status }}</p>
+                <p><b>Required Date:</b> {{ selectedIndent.required_date | date }}</p>
+                <p><b>Requested By:</b> {{ selectedIndent.requested_by_name }}</p>
+                <p *ngIf="selectedIndent.approved_by_name && selectedIndent.status !== 'pending'">
+                    <b>Approved By:</b> {{ selectedIndent.approved_by_name }}
+                </p>
+                <p *ngIf="selectedIndent.status?.toLowerCase() === 'rejected' && selectedIndent.rejection_reason"
+                    class="col-span-2 text-sm mt-2 text-red-700 bg-red-50 border border-red-300 rounded-md p-3">
+                    <b>Rejection Reason:</b> {{ selectedIndent.rejection_reason }}
+                </p>
+            </div>
+
+            <h3 class="text-lg font-semibold mt-6 mb-2">Items</h3>
+            <table class="w-full border-2 border-black text-sm">
+                <thead class="bg-gray-100">
+                    <tr class="border-b border-black">
+                        <th class="p-2 border-r border-black">Item</th>
+                        <th class="p-2 border-r border-black">Description</th>
+                        <th class="p-2 border-r border-black">Qty</th>
+                        <th class="p-2 border-r border-black">Unit</th>
+                        <th class="p-2">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of selectedIndent.indent_items" class="border-b border-black">
+                        <td class="p-2 border-r border-black">{{ item.item_name }}</td>
+                        <td class="p-2 border-r border-black">{{ item.description }}</td>
+                        <td class="p-2 border-r border-black">{{ item.quantity }}</td>
+                        <td class="p-2 border-r border-black">{{ item.unit }}</td>
+                        <td class="p-2">{{ item.estimated_price || '-' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Admin Actions -->
+            <div *ngIf="currentUser?.role === 'admin' && selectedIndent.status === 'pending'"
+                class="mt-8 border-t border-gray-300 pt-5">
+                <h4 class="font-semibold mb-3 text-gray-800">Admin Actions</h4>
+
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <!-- Left: Approve / Reject buttons -->
+                    <div class="flex flex-wrap gap-3">
+                        <button (click)="approve()"
+                            class="px-5 py-2 border-2 border-black font-semibold rounded-md bg-green-100 hover:bg-green-200 shadow-[3px_3px_0_rgba(0,0,0,1)]">
+                            ✅ Approve
+                        </button>
+
+                        <button (click)="reject()"
+                            class="px-5 py-2 border-2 border-black font-semibold rounded-md bg-red-100 hover:bg-red-200 shadow-[3px_3px_0_rgba(0,0,0,1)]">
+                            ❌ Reject
+                        </button>
+                    </div>
+
+                    <!-- Right: Reason input -->
+                    <div class="flex-1 md:max-w-xs">
+                        <input [(ngModel)]="reason" placeholder="Enter rejection reason..."
+                            class="w-full border-2 border-black rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed button -->
+            <div *ngIf="currentUser?.role?.toLowerCase() === 'admin' && selectedIndent.status === 'approved'"
+                class="mt-6 flex justify-end">
+                <button (click)="markCompleted()"
+                    class="px-5 py-2 border-2 border-black rounded-md bg-blue-100 font-semibold hover:bg-blue-200 shadow-[3px_3px_0_rgba(0,0,0,1)]">
+                    ✅ Mark as Completed
+                </button>
+            </div>
+        </div>
+    </div>

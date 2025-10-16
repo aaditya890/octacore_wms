@@ -23,7 +23,5 @@ export class AppComponent {
    constructor(private auth:AuthService){}
    ngOnInit() {
     const user = this.auth.getCurrentUser();
-    if (user) {
-      console.log(`User is logged in as ${user.role}`);
-    }
+    console.log('Current User:', user);
 }}
