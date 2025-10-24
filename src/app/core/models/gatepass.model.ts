@@ -2,7 +2,7 @@ export type GatePassStatus = 'pending' | 'approved' | 'rejected' | 'completed';
 export type GatePassType   = 'material' | 'visitor' | 'vehicle' | 'returnable';
 
 export interface GatePass {
-  id?: string;
+  id?: string | any;
   pass_number?: string;
   pass_type: GatePassType;
   party_name: string;

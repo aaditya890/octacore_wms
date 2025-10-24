@@ -9,19 +9,115 @@ export class GatepassService {
   private sb = inject(SupabaseService);
   private notify = inject(NotificationService);
 
-  // Auto generate pass number like GP-2025-0001
-  private async generatePassNumber(): Promise<string> {
-    const year = new Date().getFullYear();
-    const { count, error } = await this.sb.client
-      .from('gate_passes')
-      .select('*', { count: 'exact', head: true });
+  // fetch all (admin)
+  async getAllGatePasses() {
+    try {
+      const { data, error } = await this.sb.client
+        .from('gate_passes')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    const newNumber = (count || 0) + 1;
-    return `GP-${year}-${String(newNumber).padStart(4, '0')}`;
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      this.notify.error('Failed to load gate passes');
+      console.error('getAllGatePasses error:', err);
+      return [];
+    }
   }
 
-  // Create gate pass with optional items
+  async getGatePassesByUser(userId: string) {
+    try {
+      const { data, error } = await this.sb.client
+        .from('gate_passes')
+        .select('*')
+        .eq('created_by', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      console.error('getGatePassesByUser error:', err);
+      this.notify.error('Failed to load your passes');
+      return [];
+    }
+  }
+
+  // approve / reject
+  async updateStatus(passId: string, status: 'approved' | 'rejected') {
+    try {
+      const { error } = await this.sb.client
+        .from('gate_passes')
+        .update({ status })
+        .eq('id', passId);
+
+      if (error) throw error;
+      this.notify.success(`Gate pass ${status}`);
+      return true;
+    } catch (err) {
+      console.error('updateStatus error:', err);
+      this.notify.error('Action failed');
+      return false;
+    }
+  }
+
+  // delete
+  async deleteGatePass(passId: string) {
+    try {
+      const { error } = await this.sb.client
+        .from('gate_passes')
+        .delete()
+        .eq('id', passId);
+
+      if (error) throw error;
+      this.notify.success('Gate pass deleted');
+      return true;
+    } catch (err) {
+      console.error('deleteGatePass error:', err);
+      this.notify.error('Failed to delete');
+      return false;
+    }
+  }
+
+  // fetch by pass_number (verify + receipt)
+  async findByPassNumber(passNumber: string) {
+    try {
+      const { data, error } = await this.sb.client
+        .from('gate_passes')
+        .select(`*, gate_pass_items(*)`)
+        .eq('pass_number', passNumber)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      console.error('findByPassNumber error:', err);
+      return null;
+    }
+  }
+
+  // 👇 ye function createGatePass() ke upar daal de
+  private async generatePassNumber(): Promise<string> {
+    const year = new Date().getFullYear();
+
+    const { data, error } = await this.sb.client
+      .from('gate_passes')
+      .select('pass_number')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) console.error(error);
+
+    let lastNum = 0;
+    if (data?.pass_number) {
+      const parts = data.pass_number.split('-');
+      lastNum = parseInt(parts[2], 10) || 0;
+    }
+    const newNum = lastNum + 1;
+    return `GP-${year}-${String(newNum).padStart(4, '0')}`;
+  }
+
   async createGatePass(gatePass: GatePass, items: GatePassItem[] = []) {
     try {
       const pass_number = await this.generatePassNumber();
@@ -50,9 +146,11 @@ export class GatepassService {
           gate_pass_id: inserted.id,
           returned_quantity: i.returned_quantity ?? 0,
         }));
+
         const { error: itemError } = await this.sb.client
           .from('gate_pass_items')
           .insert(mapped);
+
         if (itemError) throw itemError;
       }
 
@@ -64,4 +162,5 @@ export class GatepassService {
       return null;
     }
   }
+
 }

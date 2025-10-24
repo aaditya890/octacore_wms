@@ -132,7 +132,6 @@ export class IndentListComponent implements OnInit {
   async confirmDelete(id: any) {
   const confirm = window.confirm("Are you sure you want to delete this indent?");
   if (!confirm) return;
-
   try {
     await this.indentService.deleteIndent(id);
     this.toast.success("Indent deleted successfully.");
@@ -143,5 +142,15 @@ export class IndentListComponent implements OnInit {
   }
 }
 
+getTotalEstimated(indent: any): number {
+    if (!indent?.indent_items || !Array.isArray(indent.indent_items)) {
+      return 0;
+    }
+    return indent.indent_items.reduce((acc: number, item: any) => {
+      const qty = Number(item?.quantity) || 0;
+      const price = Number(item?.estimated_price) || 0;
+      return acc + qty * price;
+    }, 0);
+  }
 
 }

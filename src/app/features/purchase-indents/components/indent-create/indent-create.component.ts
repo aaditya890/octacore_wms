@@ -7,6 +7,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { AppRoutes } from '../../../../core/models/app.routes.constant';
+import { UserService } from '../../../user-management/services/user.service';
 
 @Component({
   selector: 'app-indent-create',
@@ -16,21 +17,41 @@ import { AppRoutes } from '../../../../core/models/app.routes.constant';
   styleUrls: ['./indent-create.component.scss']
 })
 export class IndentCreateComponent implements OnInit {
-
+  private userService = inject(UserService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private indentService = inject(IndentService);
   private toast = inject(NotificationService);
   private auth = inject(AuthService);
+  users: any[] = [];
+  managers: any[] = [];
+  units = ["pcs", "kg", "ltr", "box", "carton", "meter"];
 
   form!: FormGroup;
   currentUser: any;
   isSubmitting = false;
 
-  ngOnInit() {
+  async ngOnInit() {
     this.initForm();
     this.getUser();
+    await this.loadUserDropdowns();
   }
+
+  async loadUserDropdowns() {
+  try {
+    // 🟢 1. All active users for Requested By
+    this.users = await this.userService.getUserList();
+
+    // 🟢 2. Filtered list for Assigned To (only admins/managers)
+    this.managers = await this.userService.getUserList({ role: 'admin' });
+    const managerList = await this.userService.getUserList({ role: 'manager' });
+
+    this.managers = [...this.managers, ...managerList];
+  } catch (err) {
+    console.error('Error loading user list:', err);
+  }
+}
+
 
   /** 🔹 Initialize FormBuilder form */
   initForm() {
@@ -40,6 +61,7 @@ export class IndentCreateComponent implements OnInit {
       priority: ['Medium', Validators.required],
       required_date: ['', Validators.required],
       requested_by: [''], // filled automatically
+      assigned_to: ['', Validators.required],
       notes: [''],
       items: this.fb.array([])
     });
@@ -52,7 +74,6 @@ export class IndentCreateComponent implements OnInit {
     if (user) {
       this.currentUser = user;
       this.form.patchValue({
-        department: user.department || '',
         requested_by: user.id
       });
     }
@@ -80,64 +101,63 @@ export class IndentCreateComponent implements OnInit {
   }
 
   /** 🔹 Submit Form */
-async submit() {
-  if (this.form.invalid || this.itemsFA.length === 0) {
-    this.toast.error('Please fill all required fields.');
-    this.form.markAllAsTouched();
-    return;
-  }
-
-  this.isSubmitting = true;
-  try {
-    const val = this.form.value;
-
-    // 🔸 Auto approval check
-    let status = 'pending';
-    let approved_by: string | null = null;
-    let approved_at: string | null = null;
-
-    if (this.currentUser?.role === 'admin' || this.currentUser?.role === 'manager') {
-      status = 'approved';
-      approved_by = this.currentUser.id;
-      approved_at = new Date().toISOString();
+  async submit() {
+    if (this.form.invalid || this.itemsFA.length === 0) {
+      this.toast.error('Please fill all required fields.');
+      this.form.markAllAsTouched();
+      return;
     }
 
-    // 🔸 Payload clean & aligned to DB fields
-    const payload = {
-      title: val.title || null,
-      department: val.department,
-      priority: val.priority.toLowerCase(),
-      required_date: val.required_date,
-      requested_by: val.requested_by,
-      notes: val.notes || null,
-      status,
-      approved_by,
-      approved_at,
-      items: val.items
-    };
+    this.isSubmitting = true;
+    try {
+      const val = this.form.value;
 
-    const created = await this.indentService.createIndent(payload);
+      // 🔸 Auto approval check
+      let status = 'pending';
+      let approved_by: string | null = null;
+      let approved_at: string | null = null;
 
-    this.toast.success(`Indent ${created.indent_number} created successfully.`);
-    
-    // Reset form after save
-    this.form.reset({
-      priority: 'medium',
-      department: this.currentUser?.department || '',
-      requested_by: this.currentUser?.id
-    });
-    this.itemsFA.clear();
-    this.addItemRow();
+      if (this.currentUser?.role === 'admin' || this.currentUser?.role === 'manager') {
+        status = 'approved';
+        approved_by = this.currentUser.id;
+        approved_at = new Date().toISOString();
+      }
 
-   
-    this.router.navigate(['/', AppRoutes.PURCHASE_INDENTS, AppRoutes.LIST_INDENTS]);
+      // 🔸 Payload clean & aligned to DB fields
+      const payload = {
+        title: val.title || null,
+        department: val.department,
+        priority: val.priority.toLowerCase(),
+        required_date: val.required_date,
+        requested_by: val.requested_by,
+        assigned_to: val.assigned_to,
+        notes: val.notes || null,
+        status,
+        approved_by,
+        approved_at,
+        items: val.items
+      };
 
-  } catch (err: any) {
-    console.error('Error creating indent:', err);
-    this.toast.error(err?.message || 'Failed to create indent.');
-  } finally {
-    this.isSubmitting = false;
+      const created = await this.indentService.createIndent(payload);
+
+      this.toast.success(`Indent ${created.indent_number} created successfully.`);
+
+      // Reset form after save
+      this.form.reset({
+        priority: 'medium',
+        department: this.currentUser?.department || '',
+        requested_by: this.currentUser?.id
+      });
+      this.itemsFA.clear();
+      this.addItemRow();
+      this.router.navigate(['/', AppRoutes.PURCHASE_INDENTS, AppRoutes.LIST_INDENTS]);
+
+    } catch (err: any) {
+      console.error('Error creating indent:', err);
+      this.toast.error(err?.message || 'Failed to create indent.');
+    } finally {
+      this.isSubmitting = false;
+    }
   }
-}
 
 }

@@ -5,9 +5,11 @@ Octacore@wms00
 sb inward/outwards me form validation 
 pagination bcha hai invenoty or indents me 
 or bill invoice wla bhi bcha hai 
-agr indents me add kre to invenoty me add ho item
 
 
+categories 
+suppiler
+ye sab ko db se lanaa hai
 
 
 export class GatepassListComponent {

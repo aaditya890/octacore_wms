@@ -23,8 +23,8 @@ export class IndentService {
 
   /** Create indent + items; returns saved indent */
   async createIndent(
-    payload: Omit<PurchaseIndent, 'id'|'indent_number'|'status'|'total_amount'|'approved_by'|'approved_at'|'rejection_reason'|'created_at'|'updated_at'>
-    & { items: IndentItem[] }
+    payload: Omit<PurchaseIndent, 'id' | 'indent_number' | 'status' | 'total_amount' | 'approved_by' | 'approved_at' | 'rejection_reason' | 'created_at' | 'updated_at'>
+      & { items: IndentItem[] }
   ): Promise<PurchaseIndent> {
     const indent_number = await this.generateIndentNumber();
 
@@ -50,7 +50,8 @@ export class IndentService {
       status: 'pending',
       total_amount,
       notes: payload.notes ?? null,
-      requested_by: payload.requested_by
+      requested_by: payload.requested_by,
+      assigned_to: payload.assigned_to ?? null
     };
 
     const { data: created, error } = await this.sb.client
@@ -64,30 +65,47 @@ export class IndentService {
     return created as PurchaseIndent;
   }
 
- async list(q: IndentQuery = { role: 'all', userId: 'all' }) {
+async list(q: IndentQuery = { role: 'all', userId: 'all' }) {
   const page = q.page ?? 1, pageSize = q.pageSize ?? 20;
   const from = (page - 1) * pageSize, to = from + pageSize - 1;
+
   let req = this.sb.client
     .from(this.T_INDENTS)
     .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to);
 
+  // 🔍 Search filter
   if (q.search?.trim()) {
     req = req.or(`indent_number.ilike.%${q.search}%,department.ilike.%${q.search}%`);
   }
+
+  // 🟡 Filter by status / priority
   if (q.status && q.status !== 'all') req = req.eq('status', q.status);
   if (q.priority && q.priority !== 'all') req = req.eq('priority', q.priority);
 
-  // 🔹 Staff-specific filter
-  if (q.role === 'staff' && q.userId) {
-    req = req.eq('requested_by', q.userId);
+  // 👇 Role-based visibility (corrected)
+  const role = (q.role ?? '').toLowerCase();
+  const userId = q.userId;
+
+  if (role === 'staff' && userId) {
+    // 🧍‍♂️ Staff — only his own indents
+    req = req.eq('requested_by', userId);
+  } else if (role === 'manager' && userId) {
+    // 🧑‍💼 Manager — indents he created or assigned to him
+    req = req.or(`requested_by.eq.${userId},assigned_to.eq.${userId}`);
+  } else if (role === 'admin' && userId) {
+    // 👑 Admin — only indents assigned to him (not all admins)
+    req = req.eq('assigned_to', userId);
   }
 
-  const { data, count, error } = await req;
+  let { data, count, error } = await req;
   if (error) throw error;
+
   return { rows: (data as PurchaseIndent[]) ?? [], total: count ?? 0 };
 }
+
+
 
 
   async getWithItems(id: string) {
@@ -118,72 +136,74 @@ export class IndentService {
     if (error) throw error;
   }
 
-async getIndentById(id: string) {
-  // Fetch indent + related items + user details (requested_by, approved_by)
-  const { data, error } = await this.sb.client
-    .from(this.T_INDENTS)
-    .select(`
+  async getIndentById(id: string) {
+    // Fetch indent + related items + user details (requested_by, approved_by)
+    const { data, error } = await this.sb.client
+      .from(this.T_INDENTS)
+      .select(`
       *,
       indent_items:indent_items(*),
       requested_user:users!purchase_indents_requested_by_fkey(full_name,email),
-      approved_user:users!purchase_indents_approved_by_fkey(full_name,email)
+      approved_user:users!purchase_indents_approved_by_fkey(full_name,email),
+      assigned_user:users!purchase_indents_assigned_to_fkey(full_name,email)
     `)
-    .eq('id', id)
-    .single();
+      .eq('id', id)
+      .single();
 
-  if (error) throw error;
+    if (error) throw error;
 
-  // Map user names for easy display
-  const indent = {
-    ...data,
-    requested_by_name: data.requested_user?.full_name || data.requested_user?.email || '—',
-    approved_by_name: data.approved_user?.full_name || data.approved_user?.email || '—',
-    indent_items: data.indent_items || []
-  };
+    // Map user names for easy display
+    const indent = {
+      ...data,
+      requested_by_name: data.requested_user?.full_name || data.requested_user?.email || '—',
+      approved_by_name: data.approved_user?.full_name || data.approved_user?.email || '—',
+      assigned_to_name: data.assigned_user?.full_name || data.assigned_user?.email || '—',
+      indent_items: data.indent_items || []
+    };
 
-  return indent;
-}
-
-
-
-async updateIndentStatus(id: string, status: string, reason?: string, approverId?: string) {
-  const payload: any = {
-    status,
-    updated_at: new Date().toISOString()
-  };
-
-  if (status === 'approved') {
-    payload.approved_by = approverId;
-    payload.approved_at = new Date().toISOString();
+    return indent;
   }
-  if (status === 'rejected') payload.rejection_reason = reason || null;
 
-  const { error } = await this.sb
-    .from('purchase_indents')
-    .update(payload)
-    .eq('id', id);
 
-  if (error) throw error;
-  return true;
-}
 
-async deleteIndent(id: string) {
-  // First delete items linked with the indent
-  const { error: itemErr } = await this.sb.client
-    .from(this.T_ITEMS)
-    .delete()
-    .eq('indent_id', id);
-  if (itemErr) throw itemErr;
+  async updateIndentStatus(id: string, status: string, reason?: string, approverId?: string) {
+    const payload: any = {
+      status,
+      updated_at: new Date().toISOString()
+    };
 
-  // Then delete the indent itself
-  const { error: indentErr } = await this.sb.client
-    .from(this.T_INDENTS)
-    .delete()
-    .eq('id', id);
-  if (indentErr) throw indentErr;
+    if (status === 'approved') {
+      payload.approved_by = approverId;
+      payload.approved_at = new Date().toISOString();
+    }
+    if (status === 'rejected') payload.rejection_reason = reason || null;
 
-  return true;
-}
+    const { error } = await this.sb
+      .from('purchase_indents')
+      .update(payload)
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
+  }
+
+  async deleteIndent(id: string) {
+    // First delete items linked with the indent
+    const { error: itemErr } = await this.sb.client
+      .from(this.T_ITEMS)
+      .delete()
+      .eq('indent_id', id);
+    if (itemErr) throw itemErr;
+
+    // Then delete the indent itself
+    const { error: indentErr } = await this.sb.client
+      .from(this.T_INDENTS)
+      .delete()
+      .eq('id', id);
+    if (indentErr) throw indentErr;
+
+    return true;
+  }
 
 
 }

@@ -2,17 +2,18 @@ export type IndentStatus = 'pending' | 'approved' | 'rejected' | 'completed';
 
 export interface PurchaseIndent {
   id?: string;
-  indent_number: string;        // e.g. IND-2025-003
+  indent_number: string;
   title?: string | null;
   department: string;
   priority: 'Low' | 'Medium' | 'High' | 'Urgent';
-  required_date: string;        // ISO (yyyy-mm-dd)
+  required_date: string;
   status: IndentStatus;
   total_amount?: number | null;
   notes?: string | null;
-  requested_by: string;         // uuid (user)
-  approved_by?: string | null;  // uuid
-  approved_at?: string | null;  // timestamptz
+  requested_by: string;          // uuid (user)
+  assigned_to?: string | null;   // 👈 add this line
+  approved_by?: string | null;
+  approved_at?: string | null;
   rejection_reason?: string | null;
   created_at?: string;
   updated_at?: string;

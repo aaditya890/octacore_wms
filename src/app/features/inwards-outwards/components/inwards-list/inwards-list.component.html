@@ -1,28 +1,127 @@
 <div class="p-8 bg-white min-h-screen" *ngIf="inwardForm">
+  <!-- Header -->
   <h1 class="text-3xl font-bold mb-2 border-b-4 border-black inline-block pb-1">
     Inward Entry
   </h1>
   <p class="text-gray-600 mb-6">Record inward inventory movement</p>
 
-  <!-- Toggle -->
-  <div class="flex items-center gap-3 mb-6">
-    <span class="font-semibold">Item Mode:</span>
-    <button
-      type="button"
-      (click)="toggleItemMode()"
-      class="px-4 py-1 border border-black rounded-md hover:bg-gray-100"
-    >
-      {{ isNewItem ? 'Switch to Existing Item' : 'Add New Item' }}
-    </button>
-  </div>
-
+  <!-- ✅ Entire Form -->
   <form
     [formGroup]="inwardForm"
     (ngSubmit)="saveInwardEntry()"
     class="grid grid-cols-1 md:grid-cols-2 gap-6"
   >
-    <!-- Item Selector -->
-    <div *ngIf="!isNewItem">
+    <!-- 🔹 Checkbox section -->
+    <div class="md:col-span-2 flex flex-col gap-2">
+      <label class="font-semibold text-sm mb-1">Options:</label>
+
+      <label class="flex items-center gap-2">
+        <input type="checkbox" formControlName="add_to_inventory" />
+        <span>Add to Inventory</span>
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="checkbox" formControlName="is_repairing" />
+        <span>Repairing Item</span>
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="checkbox" formControlName="is_other" />
+        <span>Other Item</span>
+      </label>
+    </div>
+
+    <!-- ✅ Inventory Fields -->
+    <div
+      *ngIf="inwardForm.get('add_to_inventory')?.value"
+      class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 border border-gray-300 rounded-md p-4 bg-gray-50"
+    >
+      <h3 class="font-semibold text-lg md:col-span-2">Inventory Details</h3>
+
+      <div>
+        <label class="block text-sm font-semibold mb-1">Item Name *</label>
+        <input
+          type="text"
+          formControlName="inv_item_name"
+          placeholder="Enter item name"
+          class="w-full border border-gray-300 rounded-md p-2"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold mb-1">Category *</label>
+        <select
+          formControlName="inv_category"
+          class="w-full border border-gray-300 rounded-md p-2"
+        >
+          <option value="">Select Category</option>
+          <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold mb-1">Supplier</label>
+        <select
+          formControlName="inv_supplier"
+          class="w-full border border-gray-300 rounded-md p-2"
+        >
+          <option value="">Select Supplier</option>
+          <option *ngFor="let s of suppliers" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold mb-1">Description</label>
+        <textarea
+          formControlName="inv_description"
+          rows="2"
+          placeholder="Short description..."
+          class="w-full border border-gray-300 rounded-md p-2"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- 🔹 Select / Repairing / Other Fields -->
+    <div
+      *ngIf="
+        !inwardForm.get('add_to_inventory')?.value &&
+        inwardForm.get('is_repairing')?.value
+      "
+    >
+      <label class="block text-sm font-semibold mb-1"
+        >Repairing Item Name *</label
+      >
+      <input
+        type="text"
+        formControlName="repairing_item_name"
+        placeholder="Enter repairing item name"
+        class="w-full border border-gray-300 rounded-md p-2"
+      />
+    </div>
+
+    <div
+      *ngIf="
+        !inwardForm.get('add_to_inventory')?.value &&
+        inwardForm.get('is_other')?.value
+      "
+    >
+      <label class="block text-sm font-semibold mb-1">Other Item Name *</label>
+      <input
+        type="text"
+        formControlName="other_item_name"
+        placeholder="Enter other item name"
+        class="w-full border border-gray-300 rounded-md p-2"
+      />
+    </div>
+
+    <div
+      *ngIf="
+        !inwardForm.get('add_to_inventory')?.value &&
+        !inwardForm.get('is_repairing')?.value &&
+        !inwardForm.get('is_other')?.value &&
+        !isNewItem
+      "
+    >
       <label class="block text-sm font-semibold mb-1">Select Item *</label>
       <div class="relative">
         <input
@@ -48,8 +147,14 @@
       </div>
     </div>
 
-    <!-- Manual Item -->
-    <div *ngIf="isNewItem">
+    <div
+      *ngIf="
+        !inwardForm.get('add_to_inventory')?.value &&
+        isNewItem &&
+        !inwardForm.get('is_repairing')?.value &&
+        !inwardForm.get('is_other')?.value
+      "
+    >
       <label class="block text-sm font-semibold mb-1">Item Name (Note)</label>
       <input
         type="text"
@@ -57,9 +162,12 @@
         formControlName="notes"
         class="w-full border border-gray-300 rounded-md p-2"
       />
-      <small class="text-gray-500">* This item will not be added to inventory</small>
+      <small class="text-gray-500"
+        >* This item will not be added to inventory</small
+      >
     </div>
 
+    <!-- 🔹 Quantity -->
     <div>
       <label class="block text-sm font-semibold mb-1">Quantity *</label>
       <input
@@ -69,6 +177,7 @@
       />
     </div>
 
+    <!-- 🔹 Unit -->
     <div>
       <label class="block text-sm font-semibold mb-1">Unit *</label>
       <select
@@ -82,6 +191,7 @@
       </select>
     </div>
 
+    <!-- 🔹 Rate per unit -->
     <div>
       <label class="block text-sm font-semibold mb-1">Rate per Unit</label>
       <input
@@ -91,6 +201,7 @@
       />
     </div>
 
+    <!-- 🔹 Supplier -->
     <div>
       <label class="block text-sm font-semibold mb-1">Supplier *</label>
       <input
@@ -101,6 +212,7 @@
       />
     </div>
 
+    <!-- 🔹 Reference -->
     <div>
       <label class="block text-sm font-semibold mb-1">Reference (PO/Invoice) *</label>
       <input
@@ -112,6 +224,7 @@
       <small class="text-gray-500">* Only letters and numbers allowed</small>
     </div>
 
+    <!-- 🔹 Date -->
     <div>
       <label class="block text-sm font-semibold mb-1">Transaction Date</label>
       <input
@@ -121,6 +234,7 @@
       />
     </div>
 
+    <!-- 🔹 Remarks -->
     <div class="md:col-span-2">
       <label class="block text-sm font-semibold mb-1">Remarks</label>
       <textarea
@@ -131,6 +245,7 @@
       ></textarea>
     </div>
 
+    <!-- 🔹 Buttons -->
     <div class="flex justify-end gap-4 md:col-span-2 mt-4">
       <button
         type="button"

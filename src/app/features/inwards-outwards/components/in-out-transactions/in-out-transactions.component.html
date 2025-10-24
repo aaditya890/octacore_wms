@@ -1,168 +1,326 @@
 <div class="p-8 bg-gray-50 min-h-screen">
   <!-- HEADER -->
-  <div class="flex justify-between items-center mb-8">
+  <div class="flex justify-between items-center mb-10">
     <div>
-      <h1 class="text-3xl font-bold text-gray-900">Inwards & Outwards</h1>
-      <p class="text-gray-500 mt-1">Track all inventory movement transactions</p>
+      <h1 class="text-3xl font-extrabold text-gray-900 flex items-center gap-2">
+        📦 Inwards & Outwards
+      </h1>
+      <p class="text-gray-500 mt-1 text-sm">
+        Manage and track all inventory movement transactions efficiently.
+      </p>
     </div>
 
     <div class="flex gap-3">
-      <button (click)="addInward()" class="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition">
+      <button
+        (click)="addInward()"
+        class="bg-black text-white px-4 py-2 rounded-lg shadow hover:shadow-md hover:bg-gray-800 transition-all"
+      >
         + Inward Entry
       </button>
 
-      <button (click)="addOutward()" class="border border-gray-800 px-4 py-2 rounded-md hover:bg-gray-100 font-medium">
+      <button
+        (click)="addOutward()"
+        class="border border-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 font-medium shadow-sm transition"
+      >
         + Outward Entry
       </button>
     </div>
   </div>
 
-  <!-- PAGINATION ON TOP -->
+  <!-- PAGINATION TOP -->
   <div class="flex justify-between items-center mb-4">
     <p class="text-gray-600 text-sm font-medium">
       Showing {{ getDisplayRange() }} record(s)
     </p>
 
-    <mat-paginator [length]="totalLength" [pageSize]="pageSize" [pageSizeOptions]="[5, 10, 20, 50,100,]"
-      (page)="loadTransactions($event)" showFirstLastButtons>
+    <mat-paginator
+      [length]="totalLength"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[5, 10, 20, 50, 100]"
+      (page)="loadTransactions($event)"
+      showFirstLastButtons
+    >
     </mat-paginator>
   </div>
 
-  <!-- FILTERS -->
-  <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-wrap items-end gap-4">
+  <!-- FILTER BAR -->
+  <div
+    class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 mb-8 flex flex-wrap items-end gap-5"
+  >
     <div class="flex-1 min-w-[220px]">
-      <label class="text-sm font-semibold text-gray-600 block mb-1">Search by Item</label>
-      <input type="text" [(ngModel)]="searchTerm" placeholder="Enter item name..."
-        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-black focus:outline-none" />
+      <label class="text-xs font-semibold text-gray-500 mb-1 block"
+        >Search Item</label
+      >
+      <input
+        [(ngModel)]="searchTerm"
+        placeholder="Enter item or party name..."
+        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-black focus:outline-none"
+      />
     </div>
 
     <div class="min-w-[180px]">
-      <label class="text-sm font-semibold text-gray-600 block mb-1">Type</label>
-      <select [(ngModel)]="filterType"
-        class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:outline-none">
+      <label class="text-xs font-semibold text-gray-500 mb-1 block">Type</label>
+      <select
+        [(ngModel)]="filterType"
+        class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:outline-none"
+      >
         <option value="all">All</option>
         <option value="inward">Inward</option>
         <option value="outward">Outward</option>
+        <option value="repairing">Repairing</option>
+        <option value="other">Other</option>
       </select>
     </div>
 
     <div>
-      <label class="text-sm font-semibold text-gray-600 block mb-1">Date</label>
-      <input type="date" [(ngModel)]="selectedDate"
-        class="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-black focus:outline-none" />
+      <label class="text-xs font-semibold text-gray-500 mb-1 block">Date</label>
+      <input
+        type="date"
+        [(ngModel)]="selectedDate"
+        class="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-black focus:outline-none"
+      />
     </div>
 
     <div class="flex gap-2">
-      <button (click)="applyFilter()" class="bg-black text-white px-5 py-2 rounded-md hover:bg-gray-800 transition">
+      <button
+        (click)="applyFilter()"
+        class="bg-black text-white px-5 py-2 rounded-md hover:bg-gray-800 transition-all"
+      >
         Apply
       </button>
-      <button (click)="clearFilters()" class="border border-gray-300 px-5 py-2 rounded-md hover:bg-gray-100 transition">
+      <button
+        (click)="clearFilters()"
+        class="border border-gray-300 px-5 py-2 rounded-md hover:bg-gray-100 transition-all"
+      >
         Clear
       </button>
     </div>
   </div>
 
   <!-- TABLE -->
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+  <div
+    class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"
+  >
     <div *ngIf="!loading; else loadingTpl">
-      <table mat-table [dataSource]="dataSource" class="min-w-full text-sm text-gray-700">
-
+      <table
+        mat-table
+        [dataSource]="dataSource"
+        class="min-w-full text-sm text-gray-800 table-auto"
+      >
         <!-- # -->
         <ng-container matColumnDef="sr_no">
-          <th mat-header-cell *matHeaderCellDef class="p-3 font-semibold">#</th>
-          <td mat-cell *matCellDef="let t" class="p-3">{{ t.sr_no }}</td>
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="px-4 py-3 font-semibold text-gray-600 text-left border-b"
+          >
+            #
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let t"
+            class="px-4 py-3 border-b text-gray-600"
+          >
+            {{ t.sr_no }}
+          </td>
         </ng-container>
 
         <!-- Type -->
         <ng-container matColumnDef="transaction_type">
-          <th mat-header-cell *matHeaderCellDef class="p-3 font-semibold">Type</th>
-          <td mat-cell *matCellDef="let t" class="p-3 capitalize">
-            <span [ngClass]="{
-                'bg-green-100 text-green-700': t.transaction_type === 'inward',
-                'bg-red-100 text-red-700': t.transaction_type === 'outward'
-              }" class="px-2 py-1 text-xs font-medium rounded-full">
-              {{ t.transaction_type }}
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="px-4 py-3 font-semibold text-gray-600 text-left border-b"
+          >
+            Type
+          </th>
+          <td mat-cell *matCellDef="let t" class="px-4 py-3 border-b">
+            <span
+              [ngClass]="{
+                'bg-green-50 text-green-700 border border-green-200':
+                  t.transaction_type === 'inward',
+                'bg-red-50 text-red-700 border border-red-200':
+                  t.transaction_type === 'outward'
+              }"
+              class="px-2 py-[2px] text-xs font-medium rounded-full"
+            >
+              {{ t.transaction_type | titlecase }}
             </span>
           </td>
         </ng-container>
 
-<!-- Item -->
-<ng-container matColumnDef="item">
-  <th mat-header-cell *matHeaderCellDef class="p-3 font-semibold">Item</th>
-  <td mat-cell *matCellDef="let t" class="p-3">
-    <ng-container *ngIf="t.item_name !== '—'; else showNoteName">
-      {{ t.item_name }}
-    </ng-container>
-    <ng-template #showNoteName>
-      {{ extractItemName(t.notes) || '-' }}
-    </ng-template>
-  </td>
-</ng-container>
-
+        <!-- Item -->
+        <ng-container matColumnDef="item">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="px-4 py-3 font-semibold text-gray-600 text-left border-b"
+          >
+            Item
+          </th>
+          <td mat-cell *matCellDef="let t" class="px-4 py-3 border-b">
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-gray-900">{{ t.item_name }}</span>
+              <span
+                *ngIf="t.is_repairing"
+                class="text-[11px] bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-[1px] rounded-full"
+                >Repairing</span
+              >
+              <span
+                *ngIf="t.is_other"
+                class="text-[11px] bg-gray-50 text-gray-700 border border-gray-200 px-2 py-[1px] rounded-full"
+                >Other</span
+              >
+            </div>
+          </td>
+        </ng-container>
 
         <!-- Quantity -->
         <ng-container matColumnDef="quantity">
-          <th mat-header-cell *matHeaderCellDef class="p-3 font-semibold">Qty</th>
-          <td mat-cell *matCellDef="let t" class="p-3">{{ t.quantity }}</td>
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="px-4 py-3 font-semibold text-gray-600 border-b text-right"
+          >
+            Qty
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let t"
+            class="px-4 py-3 border-b text-right"
+          >
+            {{ t.quantity }}
+          </td>
         </ng-container>
 
         <!-- Unit -->
         <ng-container matColumnDef="unit">
-          <th mat-header-cell *matHeaderCellDef class="p-3 font-semibold">Unit</th>
-          <td mat-cell *matCellDef="let t" class="p-3">{{ t.unit }}</td>
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="px-4 py-3 font-semibold text-gray-600 border-b text-left"
+          >
+            Unit
+          </th>
+          <td mat-cell *matCellDef="let t" class="px-4 py-3 border-b">
+            {{ t.unit }}
+          </td>
         </ng-container>
 
         <!-- Unit Price -->
         <ng-container matColumnDef="unit_price">
-          <th mat-header-cell *matHeaderCellDef class="p-3 font-semibold">Unit Price</th>
-          <td mat-cell *matCellDef="let t" class="p-3">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="px-4 py-3 font-semibold text-gray-600 border-b text-right"
+          >
+            Rate
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let t"
+            class="px-4 py-3 border-b text-right"
+          >
             ₹{{ t.unit_price | number: '1.0-2' }}
           </td>
         </ng-container>
 
-        <!-- Total Value -->
+        <!-- Total -->
         <ng-container matColumnDef="total_value">
-          <th mat-header-cell *matHeaderCellDef class="p-3 font-semibold">Total Value</th>
-          <td mat-cell *matCellDef="let t" class="p-3">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="px-4 py-3 font-semibold text-gray-600 border-b text-right"
+          >
+            Total
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let t"
+            class="px-4 py-3 border-b text-right font-medium text-gray-900"
+          >
             ₹{{ t.total_value | number: '1.0-2' }}
           </td>
         </ng-container>
 
-
         <!-- Party -->
         <ng-container matColumnDef="party_name">
-          <th mat-header-cell *matHeaderCellDef class="p-3 font-semibold">Party</th>
-          <td mat-cell *matCellDef="let t" class="p-3">{{ t.party_name }}</td>
-        </ng-container>
-
-        <!-- Invoice -->
-        <ng-container matColumnDef="invoice_number">
-          <th mat-header-cell *matHeaderCellDef class="p-3 font-semibold">Invoice/Ref</th>
-          <td mat-cell *matCellDef="let t" class="p-3">{{ t.invoice_number }}</td>
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="px-4 py-3 font-semibold text-gray-600 border-b text-left"
+          >
+            Party
+          </th>
+          <td mat-cell *matCellDef="let t" class="px-4 py-3 border-b">
+            {{ t.party_name }}
+          </td>
         </ng-container>
 
         <!-- Date -->
         <ng-container matColumnDef="created_at">
-          <th mat-header-cell *matHeaderCellDef class="p-3 font-semibold">Date & Time</th>
-          <td mat-cell *matCellDef="let t" class="p-3">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="px-4 py-3 font-semibold text-gray-600 border-b text-left"
+          >
+            Date & Time
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let t"
+            class="px-4 py-3 border-b text-gray-600"
+          >
             {{ t.created_at | date: 'dd MMM yyyy, hh:mm a' }}
           </td>
         </ng-container>
 
         <!-- Actions -->
         <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef class="p-3 font-semibold text-center">Actions</th>
-          <td mat-cell *matCellDef="let t" class="p-3 text-center">
-            <button (click)="deleteTransaction(t)"
-              class="border border-red-500 text-red-600 px-3 py-1 rounded-md hover:bg-red-100 text-sm transition">
-              Delete
-            </button>
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="px-4 py-3 font-semibold text-gray-600 border-b text-center"
+          >
+            Actions
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let t"
+            class="px-4 py-3 border-b text-center"
+          >
+            <div class="flex justify-center gap-2">
+              <button
+                (click)="viewDetails(t)"
+                class="border border-blue-500 text-blue-600 px-3 py-1 rounded-md text-xs font-medium hover:bg-blue-50 transition-all"
+              >
+                View
+              </button>
+              <button
+                (click)="deleteTransaction(t)"
+                class="border border-red-500 text-red-600 px-3 py-1 rounded-md text-xs font-medium hover:bg-red-50 transition-all"
+              >
+                Delete
+              </button>
+            </div>
           </td>
         </ng-container>
 
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-gray-100 border-b"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="border-b hover:bg-gray-50 transition"></tr>
+        <!-- ROWS -->
+        <tr
+          mat-header-row
+          *matHeaderRowDef="displayedColumns"
+          class="bg-gray-50"
+        ></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns"
+          class="hover:bg-gray-50 transition-all"
+          [ngClass]="{
+            'bg-yellow-50/70': row.is_repairing,
+            'bg-gray-50/60': row.is_other
+          }"
+        ></tr>
       </table>
     </div>
 

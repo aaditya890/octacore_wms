@@ -1,0 +1,53 @@
+<div class="min-h-screen bg-gray-50 px-8 py-10">
+  <div class="max-w-xl mx-auto bg-white border rounded-2xl shadow-sm p-6">
+    <h1 class="text-2xl font-bold mb-2">Verify Gate Pass</h1>
+    <p class="text-gray-500 mb-6">Enter a gate pass number to verify its validity</p>
+
+    <div class="flex gap-3 mb-6">
+      <input
+        [(ngModel)]="code"
+        placeholder="Enter Pass Number"
+        class="input flex-1"
+      />
+      <button
+        (click)="verify()"
+        class="bg-black text-white px-5 py-2 rounded-lg"
+        [disabled]="loading"
+      >
+        Verify
+      </button>
+      <button (click)="clear()" class="border px-4 py-2 rounded-lg">Clear</button>
+    </div>
+
+    <div *ngIf="loading" class="text-center text-gray-500">Checking...</div>
+
+    <div *ngIf="!loading && result" class="border-t pt-4">
+      <h2 class="font-semibold mb-2 text-lg">Gate Pass Details</h2>
+      <div class="space-y-2 text-sm">
+        <p><b>Pass Number:</b> {{ result.pass_number }}</p>
+        <p><b>Type:</b> {{ result.pass_type | titlecase }}</p>
+        <p><b>Party Name:</b> {{ result.party_name }}</p>
+        <p><b>Contact:</b> {{ result.party_contact }}</p>
+        <p><b>Vehicle:</b> {{ result.vehicle_number || '—' }}</p>
+        <p><b>Purpose:</b> {{ result.purpose }}</p>
+        <p><b>Valid From:</b> {{ result.valid_from | date: 'short' }}</p>
+        <p><b>Valid To:</b> {{ result.valid_to | date: 'short' }}</p>
+        <p><b>Status:</b> <span class="font-semibold">{{ result.status | titlecase }}</span></p>
+        <p><b>Notes:</b> {{ result.notes || '—' }}</p>
+      </div>
+
+      <div *ngIf="result.items?.length" class="mt-4">
+        <h3 class="font-semibold mb-1">Items:</h3>
+        <ul class="list-disc ml-5 text-sm">
+          <li *ngFor="let item of result.items">
+            {{ item.item_name }} ({{ item.quantity }} {{ item.unit }})
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && !result && code" class="text-center text-red-500 mt-6">
+      ❌ Invalid or expired gate pass.
+    </div>
+  </div>
+</div>

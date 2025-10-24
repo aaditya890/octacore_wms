@@ -30,25 +30,41 @@ export class InoutService {
     }
   }
 
- async addTransaction(transaction: Transaction): Promise<boolean> {
+async addTransaction(transaction: Transaction): Promise<boolean> {
   try {
-    // ⬇️ Strip or nullify created_by to avoid FK failures
     const safeTx: any = { ...transaction };
-    if (!safeTx.created_by) delete safeTx.created_by; // or: safeTx.created_by = null;
+    if (!safeTx.created_by) delete safeTx.created_by;
+
+    const noteStr = (safeTx.notes || '').toLowerCase();
+
+    // ✅ Auto detect repairing/other
+    safeTx.is_repairing =
+      safeTx.is_repairing === true ||
+      noteStr.includes('repair') ||
+      noteStr.includes('service') ||
+      noteStr.includes('maintenance');
+
+    safeTx.is_other =
+      safeTx.is_other === true ||
+      noteStr.includes('other') ||
+      noteStr.includes('misc') ||
+      noteStr.includes('etc');
 
     const { error } = await this.supabaseService
       .from('transactions')
       .insert(safeTx);
 
     if (error) throw error;
-    this.notificationService.success('Transaction created successfully');
+    this.notificationService.success('Transaction created successfully ✅');
     return true;
   } catch (error) {
     console.error('Error creating transaction:', error);
-    this.notificationService.error('Failed to create transaction');
+    this.notificationService.error('Failed to create transaction ❌');
     return false;
   }
 }
+
+
 
 
   async getTransactionSummary(date_from?: string, date_to?: string): Promise<TransactionSummary> {
@@ -77,47 +93,48 @@ export class InoutService {
   }
 
   async syncInventoryStock(transaction: Transaction) {
-    try {
-      const { item_id, quantity, transaction_type } = transaction;
+  try {
+    const { item_id, quantity, transaction_type } = transaction;
 
-      if (!item_id || !quantity) return;
+    if (!item_id || !quantity) return;
 
-      // 1️⃣ Fetch existing item
-      const { data: itemData, error: fetchError } = await this.supabaseService
-        .from('inventory_items')
-        .select('qty')        // 👉 change this to your real column name (e.g. qty or quantity)
-        .eq('id', item_id)
-        .single();
+    // 🔹 Always fetch latest quantity from DB
+    const { data: itemData, error: fetchError } = await this.supabaseService
+      .from('inventory_items')
+      .select('quantity')
+      .eq('id', item_id)
+      .single();
 
-      if (fetchError) throw fetchError;
+    if (fetchError) throw fetchError;
 
-      let currentQty = Number(itemData?.qty || 0);
+    const currentQty = Number(itemData?.quantity ?? 0);
+    let newQty = currentQty;
 
-      // 2️⃣ Adjust only once
-      let newQty = currentQty;
-
-      if (transaction_type === 'inward') {
-        newQty = currentQty + Number(quantity);
-      } else if (transaction_type === 'outward') {
-        newQty = currentQty - Number(quantity);
-      }
-
-      if (newQty < 0) newQty = 0; // prevent negative stock
-
-      // 3️⃣ Update DB
-      const { error: updateError } = await this.supabaseService
-        .from('inventory_items')
-        .update({ qty: newQty })
-        .eq('id', item_id);
-
-      if (updateError) throw updateError;
-
-      this.notificationService.success(`Stock updated successfully — New Qty: ${newQty}`);
-      console.log(`[Stock Sync] ${transaction_type} done → ${currentQty} → ${newQty}`);
-    } catch (error) {
-      console.error('[syncInventoryStock] Error syncing inventory stock:', error);
+    // 🔹 Adjust stock correctly (only once)
+    if (transaction_type === 'inward') {
+      newQty = currentQty + Number(quantity);
+    } else if (transaction_type === 'outward') {
+      newQty = currentQty - Number(quantity);
     }
+
+    if (newQty < 0) newQty = 0; // prevent negative stock
+
+    // 🔹 Update quantity in DB
+    const { error: updateError } = await this.supabaseService
+      .from('inventory_items')
+      .update({ quantity: newQty })
+      .eq('id', item_id);
+
+    if (updateError) throw updateError;
+
+    // 🔹 Notify + Log
+    this.notificationService.success(`Stock updated successfully — New Qty: ${newQty}`);
+    console.log(`[Stock Sync] ${transaction_type} done → ${currentQty} → ${newQty}`);
+  } catch (error) {
+    console.error('[syncInventoryStock] Error syncing inventory stock:', error);
   }
+}
+
 
   async getTransactionListPaged(
     pageIndex: number,

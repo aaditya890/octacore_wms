@@ -116,7 +116,7 @@
 
     // Users Methods
     async getUsers() {
-      return await this.supabase.from("users").select("*").order("firstName", { ascending: true })
+      return await this.supabase.from("users").select("*").order("full_name", { ascending: true })
     }
 
     async getUserById(id: string) {

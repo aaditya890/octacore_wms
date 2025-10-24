@@ -15,6 +15,10 @@ export interface Transaction {
   notes?: string;
   created_by?: any;
   created_at?: any;
+  is_repairing?: boolean;
+  is_other?: boolean;
+  item_display_name?:any,
+  expected_return_date?: string | null | Date;
 }
 
 

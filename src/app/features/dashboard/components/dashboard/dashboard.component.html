@@ -1,90 +1,99 @@
-<div class="min-h-screen bg-white text-black p-4">
+<div class="min-h-screen bg-gray-50 px-8 py-10">
   <!-- HEADER -->
-  <div class="mb-8">
-    <h1 class="text-3xl font-extrabold mb-2 border-b-4 border-black inline-block pb-1">
-      Dashboard
-    </h1>
-    <p class="text-gray-600">Warehouse performance overview</p>
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-extrabold text-gray-900">Dashboard</h1>
+      <p class="text-gray-500 text-sm mt-1">Warehouse overview and quick actions</p>
+    </div>
+    <div class="text-sm text-gray-600">
+      <span class="font-semibold text-gray-800">Welcome,</span>
+      {{ currentUser.name }} ({{ currentUser.role }})
+    </div>
   </div>
 
-  <!-- WELCOME -->
-  <div class="bg-gray-50 border-2 border-black rounded-2xl p-6 mb-10 shadow-[6px_6px_0_rgba(0,0,0,1)]">
-    <h2 class="text-2xl font-bold mb-1">
-      Welcome back, {{ currentUser.name }}
-      <span class="text-gray-500 text-lg font-semibold">({{ currentUser.role }})</span>
+  <!-- STATS GRID -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div class="bg-white p-6 border-[1.5px] border-gray-300 rounded-xl shadow-sm">
+      <p class="text-gray-500 text-sm mb-1">Total Items</p>
+      <p class="text-3xl font-bold text-gray-900">{{ stats.totalItems }}</p>
+    </div>
+
+    <div class="bg-red-50 p-6 border-[1.5px] border-red-200 rounded-xl shadow-sm">
+      <p class="text-gray-500 text-sm mb-1">Low Stock Items</p>
+      <p class="text-3xl font-bold text-red-600">{{ stats.lowStockItems }}</p>
+    </div>
+
+    <div class="bg-green-50 p-6 border-[1.5px] border-green-200 rounded-xl shadow-sm">
+      <p class="text-gray-500 text-sm mb-1">Total Inwards</p>
+      <p class="text-3xl font-bold text-green-700">
+        ₹{{ stats.totalInwards | number: '1.0-0' }}
+      </p>
+    </div>
+
+    <div class="bg-yellow-50 p-6 border-[1.5px] border-yellow-200 rounded-xl shadow-sm">
+      <p class="text-gray-500 text-sm mb-1">Total Outwards</p>
+      <p class="text-3xl font-bold text-yellow-700">
+        ₹{{ stats.totalOutwards | number: '1.0-0' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- LOW STOCK ALERT -->
+  <div class="bg-white border-[1.5px] border-gray-300 rounded-xl p-6 mb-10 shadow-sm">
+    <h2 class="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+      ⚠️ Low Stock Alert
     </h2>
-    <p class="text-gray-600">Here’s a quick summary of your warehouse.</p>
-  </div>
+    <p class="text-sm text-gray-500 mb-4">Items that require immediate restocking</p>
 
-  <!-- DASHBOARD STATS -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-
-    <!-- TOTAL ITEMS -->
-    <div class="border-2 border-black rounded-2xl p-6 bg-blue-50">
-      <p class="text-sm text-gray-600 mb-1">Total Items in Warehouse</p>
-      <p class="text-3xl font-bold">{{ stats.totalItems }}</p>
+    <div *ngIf="lowStockItems.length === 0" class="text-center py-8 text-green-600 font-medium flex items-center justify-center gap-2">
+      <span class="text-lg">✅</span> All items are sufficiently stocked.
     </div>
 
-    <!-- OUT OF STOCK -->
-    <div class="border-2 border-black rounded-2xl p-6 bg-red-50">
-      <p class="text-sm text-gray-600 mb-1">Out of Stock Items</p>
-      <p class="text-3xl font-bold text-red-700">{{ stats.lowStockItems }}</p>
-    </div>
-
-    <!-- PENDING INDENTS -->
-    <div class="border-2 border-black rounded-2xl p-6 bg-orange-50">
-      <p class="text-sm text-gray-600 mb-1">Pending Indents</p>
-      <p class="text-3xl font-bold text-orange-700">{{ stats.pendingIndents }}</p>
-    </div>
-
-    <!-- PENDING GATE PASS APPROVALS -->
-    <div class="border-2 border-black rounded-2xl p-6 bg-teal-50 lg:col-span-3">
-      <p class="text-sm text-gray-600 mb-1">Pending Gate Pass Approvals</p>
-      <p class="text-3xl font-bold text-teal-700">{{ stats.pendingGatePass || 0 }}</p>
-    </div>
-  </div>
-
-  <!-- ⚠ LOW STOCK -->
-  <div class="border-2 border-black rounded-2xl p-6 bg-gray-50 shadow-[4px_4px_0_rgba(0,0,0,1)] mb-10">
-    <h3 class="font-bold text-lg mb-2 text-yellow-600">⚠ Low Stock Alert</h3>
-    <p class="text-sm text-gray-600 mb-4">Items requiring immediate attention</p>
-    <div *ngIf="lowStockItems.length === 0" class="text-center py-12 text-gray-500">
-      ✅ All items are well stocked
-    </div>
-    <div *ngIf="lowStockItems.length > 0" class="space-y-3">
-      <div *ngFor="let item of lowStockItems"
-        class="flex items-center justify-between p-3 border-2 border-black rounded-xl bg-red-50">
+    <div *ngIf="lowStockItems.length > 0" class="divide-y divide-gray-200">
+      <div
+        *ngFor="let item of lowStockItems"
+        class="flex justify-between my-2 items-center py-3 px-2 hover:bg-red-50 border-[1.5px] border-red-200 rounded-lg transition"
+      >
         <div>
-          <p class="font-medium text-black">{{ item.item_name }}</p>
-          <p class="text-sm text-gray-700">{{ item.item_code }}</p>
+          <p class="font-semibold text-gray-900">{{ item.item_name }}</p>
+          <p class="text-xs text-gray-500">{{ item.item_code }}</p>
         </div>
         <div class="text-right">
-          <p class="font-bold text-red-600">{{ item.quantity }} {{ item.unit }}</p>
-          <p class="text-xs text-gray-500">Min: {{ item.min_quantity }}</p>
+          <p class="text-red-600 font-bold">
+            {{ item.quantity }} {{ item.unit }}
+          </p>
+          <p class="text-xs text-gray-400">Min: {{ item.min_quantity }}</p>
         </div>
       </div>
     </div>
   </div>
 
   <!-- QUICK ACTIONS -->
-  <div class="border-2 border-black rounded-2xl p-6 bg-white shadow-[4px_4px_0_rgba(0,0,0,1)]">
-    <h3 class="text-lg font-bold mb-2">Quick Actions</h3>
-    <p class="text-sm text-gray-600 mb-4">Frequently used operations</p>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <button *ngFor="let action of quickActions" (click)="navigateTo(action.route)"
-        class="p-5 border-2 border-black rounded-xl hover:-translate-y-1 hover:shadow-[4px_4px_0_rgba(0,0,0,1)] transition-all"
-        [ngClass]="action.bgColor">
-        <svg class="w-6 h-6 mx-auto mb-2" [ngClass]="action.color" fill="none" stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="action.icon" />
+  <div class="bg-white border-[1.5px] border-gray-300 rounded-xl p-6 shadow-sm">
+    <h2 class="text-lg font-bold text-gray-900 mb-3">Quick Actions</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <button
+        *ngFor="let action of quickActions"
+        (click)="navigateTo(action.route)"
+        class="p-5 rounded-lg border-[1.5px] border-gray-300 flex flex-col items-center justify-center hover:-translate-y-1 hover:shadow-md transition-all"
+        [ngClass]="action.bgColor"
+      >
+        <svg
+          class="w-6 h-6 mb-2"
+          [ngClass]="action.color"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            [attr.d]="action.icon"
+          />
         </svg>
-        <p class="font-bold text-center">{{ action.title }}</p>
+        <p class="font-semibold text-gray-800 text-sm">{{ action.title }}</p>
       </button>
     </div>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="mt-10 text-center text-sm text-gray-600 border-t-2 border-black pt-4">
-    <p>© 2025 Warehouse Management System. All rights reserved.</p>
   </div>
 </div>

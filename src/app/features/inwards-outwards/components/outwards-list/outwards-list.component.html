@@ -1,4 +1,5 @@
 <div class="p-8 bg-white min-h-screen" *ngIf="outwardForm">
+  <!-- HEADER -->
   <h1 class="text-3xl font-bold mb-2 border-b-4 border-black inline-block pb-1">
     Outward Entry
   </h1>
@@ -9,68 +10,85 @@
     (ngSubmit)="saveOutwardEntry()"
     class="grid grid-cols-1 md:grid-cols-2 gap-6"
   >
-    <!-- Item Selector -->
+    <!-- ITEM SELECTION -->
     <div>
       <label class="block text-sm font-semibold mb-1">Select Item *</label>
+
       <div class="relative">
-  <input
-    type="text"
-    placeholder="Type item name..."
-    formControlName="item_name"
-    (input)="onItemInput($event)"
-    [value]="selectedItemName"
-    class="w-full border border-gray-300 rounded-md p-2"
-  />
+        <input
+          type="text"
+          placeholder="Type item name..."
+          (input)="onItemInput($event)"
+          [value]="selectedItemName"
+          class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:outline-none"
+        />
 
-  <ul
-    *ngIf="filteredItems.length > 0"
-    class="absolute left-0 right-0 border border-gray-300 bg-white rounded-md mt-1 max-h-40 overflow-y-auto shadow-md z-50"
-  >
-    <li
-      *ngFor="let item of filteredItems"
-      (click)="selectItem(item)"
-      class="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-    >
-      {{ item.item_name }}
-    </li>
-  </ul>
-</div>
+        <!-- DROPDOWN LIST -->
+        <ul
+          *ngIf="filteredItems.length > 0"
+          class="absolute left-0 right-0 border border-gray-300 bg-white rounded-md mt-1 max-h-40 overflow-y-auto shadow-md z-50"
+        >
+          <li
+            *ngFor="let item of filteredItems"
+            (click)="selectItem(item)"
+            class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+          >
+            {{ item.item_name }}
+          </li>
+        </ul>
+      </div>
 
+      <!-- STOCK INFO -->
+      <div
+        *ngIf="selectedItemStock !== null"
+        class="mt-2 text-xs px-3 py-2 rounded-md border"
+        [ngClass]="{
+          'bg-green-50 text-green-700 border-green-200': selectedItemStock > 50,
+          'bg-yellow-50 text-yellow-700 border-yellow-200': selectedItemStock <= 50 && selectedItemStock > 10,
+          'bg-red-50 text-red-700 border-red-200': selectedItemStock <= 10
+        }"
+      >
+        💡 <span class="font-semibold">{{ selectedItemStock }}</span> available in stock
+      </div>
     </div>
 
+    <!-- QUANTITY -->
     <div>
       <label class="block text-sm font-semibold mb-1">Quantity *</label>
       <input
         type="number"
         formControlName="quantity"
-        class="w-full border border-gray-300 rounded-md p-2"
         placeholder="Enter quantity"
+        class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:outline-none"
       />
     </div>
 
+    <!-- UNIT -->
     <div>
       <label class="block text-sm font-semibold mb-1">Unit *</label>
       <select
         formControlName="unit"
-        class="w-full border border-gray-300 rounded-md p-2"
+        class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:outline-none"
       >
-        <option value="" disabled selected>Select Unit</option>
+        <option value="" disabled>Select Unit</option>
         <option *ngFor="let unit of unitOptions" [value]="unit">
           {{ unit }}
         </option>
       </select>
     </div>
 
+    <!-- RATE -->
     <div>
       <label class="block text-sm font-semibold mb-1">Rate per Unit</label>
       <input
         type="number"
         formControlName="unit_price"
-        class="w-full border border-gray-300 rounded-md p-2"
         placeholder="Enter rate per unit"
+        class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:outline-none"
       />
     </div>
 
+    <!-- CUSTOMER -->
     <div>
       <label class="block text-sm font-semibold mb-1"
         >Customer / Destination *</label
@@ -79,10 +97,11 @@
         type="text"
         formControlName="party_name"
         placeholder="Enter customer name or destination"
-        class="w-full border border-gray-300 rounded-md p-2"
+        class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:outline-none"
       />
     </div>
 
+    <!-- REFERENCE -->
     <div>
       <label class="block text-sm font-semibold mb-1"
         >Reference (Indent / Request) *</label
@@ -91,30 +110,53 @@
         type="text"
         formControlName="invoice_number"
         placeholder="Indent or Request Number"
-        class="w-full border border-gray-300 rounded-md p-2"
+        class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:outline-none"
       />
     </div>
 
+    <!-- REPAIRING SECTION -->
+    <div class="md:col-span-2 border border-gray-300 rounded-md p-4 bg-gray-50">
+      <h3 class="font-semibold text-lg mb-3">Repairing Details</h3>
+
+      <label class="flex items-center gap-2 mb-3">
+        <input type="checkbox" formControlName="is_repairing" />
+        <span>Repairing Item</span>
+      </label>
+
+      <div *ngIf="outwardForm.get('is_repairing')?.value">
+        <label class="block text-sm font-semibold mb-1"
+          >Expected Return Date</label
+        >
+        <input
+          type="date"
+          formControlName="expected_return_date"
+          class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:outline-none"
+        />
+      </div>
+    </div>
+
+    <!-- TRANSACTION DATE -->
     <div>
       <label class="block text-sm font-semibold mb-1">Transaction Date</label>
       <input
         type="date"
         formControlName="transaction_date"
-        class="w-full border border-gray-300 rounded-md p-2"
+        class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:outline-none"
       />
     </div>
 
+    <!-- REMARKS -->
     <div class="md:col-span-2">
       <label class="block text-sm font-semibold mb-1">Remarks</label>
       <textarea
         formControlName="notes"
         rows="3"
         placeholder="Enter remarks if any"
-        class="w-full border border-gray-300 rounded-md p-2"
+        class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-black focus:outline-none"
       ></textarea>
     </div>
 
-    <!-- Buttons -->
+    <!-- BUTTONS -->
     <div class="flex justify-end gap-4 md:col-span-2 mt-4">
       <button
         type="button"

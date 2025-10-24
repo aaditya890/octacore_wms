@@ -5,7 +5,7 @@ import { GatepassCreateComponent } from './components/gatepass-create/gatepass-c
 import { GatepassVerifyComponent } from './components/gatepass-verify/gatepass-verify.component';
 
 export const gatepassRoutes: Routes = [
-    { path: 'create', component: GatepassCreateComponent },
+    { path: '', component: GatepassListComponent },
   { path: 'create', component: GatepassCreateComponent },
   { path: 'verify', component: GatepassVerifyComponent },
 ];
