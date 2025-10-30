@@ -1,0 +1,78 @@
+<div class="min-h-screen bg-gray-50 px-8 py-10">
+  <div class="max-w-3xl mx-auto bg-white border rounded-2xl shadow-sm p-8" *ngIf="!loading; else loadingTpl">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Gate Pass Receipt</h1>
+      <div class="flex gap-3">
+        <button (click)="print()" class="border border-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100">🖨️ Print</button>
+        <button (click)="back()" class="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800">Back</button>
+      </div>
+    </div>
+
+    <div *ngIf="data; else notFound">
+      <div class="mb-4">
+        <p><b>Pass No:</b> {{ data.pass_number }}</p>
+        <p><b>Type:</b> {{ data.pass_type | titlecase }}</p>
+        <p>
+          <b>Status:</b>
+          <span class="font-semibold"
+            [ngClass]="{
+              'text-green-600': data.status === 'approved',
+              'text-red-600': data.status === 'rejected',
+              'text-yellow-600': data.status === 'pending'
+            }"
+            >{{ data.status | titlecase }}</span
+          >
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-5">
+        <div><b>Party Name:</b> {{ data.party_name }}</div>
+        <div><b>Contact:</b> {{ data.party_contact || '—' }}</div>
+        <div><b>Vehicle:</b> {{ data.vehicle_number || '—' }}</div>
+        <div><b>Purpose:</b> {{ data.purpose }}</div>
+        <div><b>Valid From:</b> {{ getFormattedDate(data.valid_from) }}</div>
+        <div><b>Valid To:</b> {{ getFormattedDate(data.valid_to) }}</div>
+      </div>
+
+      <div *ngIf="data.items?.length" class="mt-6 border-t pt-4">
+        <h2 class="font-semibold mb-2 text-lg text-gray-800">Items in Gate Pass</h2>
+        <table class="w-full text-sm border rounded-lg overflow-hidden">
+          <thead class="bg-gray-100 text-gray-600">
+            <tr>
+              <th class="py-2 px-3 border">#</th>
+              <th class="py-2 px-3 border text-left">Item Name</th>
+              <th class="py-2 px-3 border">Quantity</th>
+              <th class="py-2 px-3 border">Unit</th>
+              <th class="py-2 px-3 border text-left">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of data.items; let i = index" class="border-b">
+              <td class="py-2 px-3 text-center">{{ i + 1 }}</td>
+              <td class="py-2 px-3">{{ item.item_name }}</td>
+              <td class="py-2 px-3 text-center">{{ item.quantity }}</td>
+              <td class="py-2 px-3 text-center">{{ item.unit }}</td>
+              <td class="py-2 px-3">{{ item.description || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-5 border-t pt-3 text-sm text-gray-500">
+        <p><b>Created At:</b> {{ getFormattedDate(data.created_at) }}</p>
+        <p><b>Notes:</b> {{ data.notes || '—' }}</p>
+      </div>
+    </div>
+
+    <ng-template #notFound>
+      <p class="text-center text-red-500">❌ No details found for this gate pass.</p>
+    </ng-template>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="text-center py-20 text-gray-500">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="mt-3">Loading gate pass details...</p>
+    </div>
+  </ng-template>
+</div>

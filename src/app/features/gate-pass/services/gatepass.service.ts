@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { GatePass, GatePassItem } from '../../../core/models/gatepass.model';
+import { GatePass, GatePassItem, GatePassWithItems } from '../../../core/models/gatepass.model';
 
 
 @Injectable({ providedIn: 'root' })
@@ -80,16 +80,20 @@ export class GatepassService {
   }
 
   // fetch by pass_number (verify + receipt)
-  async findByPassNumber(passNumber: string) {
+  async findByPassNumber(passNo: string): Promise<GatePassWithItems | null> {
     try {
       const { data, error } = await this.sb.client
-        .from('gate_passes')
-        .select(`*, gate_pass_items(*)`)
-        .eq('pass_number', passNumber)
+        .from('gate_passes') // ✅ correct table name
+        .select('*, gate_pass_items(*)') // include related items
+        .eq('pass_number', passNo)
         .single();
 
-      if (error) throw error;
-      return data;
+      if (error || !data) return null;
+
+      return {
+        ...data,
+        items: data.gate_pass_items || []
+      };
     } catch (err) {
       console.error('findByPassNumber error:', err);
       return null;
@@ -99,16 +103,13 @@ export class GatepassService {
   // 👇 ye function createGatePass() ke upar daal de
   private async generatePassNumber(): Promise<string> {
     const year = new Date().getFullYear();
-
     const { data, error } = await this.sb.client
       .from('gate_passes')
       .select('pass_number')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-
     if (error) console.error(error);
-
     let lastNum = 0;
     if (data?.pass_number) {
       const parts = data.pass_number.split('-');
@@ -124,7 +125,6 @@ export class GatepassService {
 
       const { data: user } = await this.sb.client.auth.getUser();
       const created_by = user?.user?.id ?? null;
-
       const payload: GatePass = {
         ...gatePass,
         pass_number,

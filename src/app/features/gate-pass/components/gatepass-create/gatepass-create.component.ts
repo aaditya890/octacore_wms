@@ -18,7 +18,7 @@ export class GatepassCreateComponent {
    form: FormGroup;
   passTypes = ['material', 'visitor', 'vehicle', 'returnable'];
 
-  constructor(private fb: FormBuilder, private svc: GatepassService) {
+  constructor(private fb: FormBuilder, private svc: GatepassService,private router:Router) {
     this.form = this.fb.group({
       pass_type: ['', Validators.required],
       party_name: ['', Validators.required],
@@ -51,15 +51,26 @@ export class GatepassCreateComponent {
     this.items.removeAt(i);
   }
 
-  async onSubmit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
-    const { items, ...gatepass } = this.form.value;
-    await this.svc.createGatePass(gatepass, items);
-    this.form.reset();
-    this.items.clear();
+async onSubmit() {
+  if (this.form.invalid) {
+    this.form.markAllAsTouched();
+    return;
   }
+
+  const { items, ...gatepass } = this.form.value;
+
+ 
+  const payload = {
+    ...gatepass,
+    valid_from: new Date(gatepass.valid_from).toISOString(),
+    valid_to: new Date(gatepass.valid_to).toISOString(),
+  };
+
+  await this.svc.createGatePass(payload, items);
+  this.form.reset();
+  this.items.clear();
+  this.router.navigate(['/', AppRoutes.GATE_PASS,]);
+}
+
+
 }

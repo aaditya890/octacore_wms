@@ -12,6 +12,7 @@ export const AppRoutes = {
   CREATE_GATE_PASS: 'create',
   LIST_GATE_PASS: 'list',
   VERIFY_GATE_PASS: 'verify',
+  GATEPASS_RECEIPT: 'receipt',
   INOUT: 'inwards-outwards',
   INWARDS: 'inwards',
   OUTWARDS: 'outwards',
