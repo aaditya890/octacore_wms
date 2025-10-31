@@ -53,7 +53,7 @@ export class GatepassVerifyComponent implements OnInit {
 
     if (isApproved && isWithinRange) {
       this.result = res;
-      this.statusMessage = '✅ Gate Pass Verified Successfully';
+      this.statusMessage = 'Gate Pass Verified Successfully';
       this.statusColor = 'text-green-600';
     } else if (isApproved && now > validTo) {
       this.showInvalid('⚠️ Gate Pass Expired.');
