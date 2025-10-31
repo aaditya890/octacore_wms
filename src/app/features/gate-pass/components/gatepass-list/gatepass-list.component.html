@@ -1,69 +1,130 @@
-<div class="min-h-screen bg-gray-50 px-8 py-10">
-  <div class="max-w-6xl mx-auto bg-white border rounded-2xl shadow-sm p-6">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Gate Pass Management</h1>
-      <div class="flex justify-between gap-2">
-        <button class="bg-black text-white px-4 py-2 rounded-lg" (click)="loadGatePasses()" [disabled]="loading">
+<div class="min-h-screen bg-gray-50 px-6 py-10">
+  <div class="max-w-6xl mx-auto bg-white border rounded-2xl shadow-md p-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-2xl font-bold text-gray-800 tracking-tight">
+        Gate Pass Management
+      </h1>
+      <div class="flex gap-3">
+        <button
+          class="bg-black text-white px-5 py-2 rounded-lg hover:bg-gray-800 transition-all"
+          (click)="loadGatePasses()"
+          [disabled]="loading"
+        >
           Refresh
         </button>
-        <button (click)="goToAddNewGatepass()" class="bg-black text-white px-4 py-2 rounded-lg">
+        <button
+          (click)="goToAddNewGatepass()"
+          class="bg-black text-white px-5 py-2 rounded-lg hover:bg-gray-800 transition-all"
+        >
           Add New Gatepass
         </button>
       </div>
     </div>
 
-    <button (click)="goToVerifyGatepass()" class="border border-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100">
-      Verify Gatepass
-    </button>
+    <!-- Verify Button -->
+    <div class="mb-6">
+      <button
+        (click)="goToVerifyGatepass()"
+        class="border border-gray-800 px-5 py-2 rounded-lg hover:bg-gray-100 transition-all"
+      >
+        Verify Gatepass
+      </button>
+    </div>
 
-    <table class="min-w-full border text-sm">
-      <thead class="bg-gray-100 text-gray-700">
-        <tr>
-          <th class="py-2 px-3 border">#</th>
-          <th class="py-2 px-3 border">Pass No</th>
-          <th class="py-2 px-3 border">Party</th>
-          <th class="py-2 px-3 border">Type</th>
-          <th class="py-2 px-3 border">Valid From</th>
-          <th class="py-2 px-3 border">Valid To</th>
-          <th class="py-2 px-3 border">Status</th>
-          <th class="py-2 px-3 border text-center">Actions</th>
-        </tr>
-      </thead>
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm border rounded-xl overflow-hidden shadow-sm">
+        <thead class="bg-gray-100 text-gray-700 text-sm">
+          <tr>
+            <th class="py-3 px-4 border text-center w-12">#</th>
+            <th class="py-3 px-4 border text-left w-40">Pass No</th>
+            <th class="py-3 px-4 border text-left w-40">Party</th>
+            <th class="py-3 px-4 border text-left w-32">Type</th>
+            <th class="py-3 px-4 border text-center w-40">Valid From</th>
+            <th class="py-3 px-4 border text-center w-40">Valid To</th>
+            <th class="py-3 px-4 border text-center w-28">Status</th>
+            <th class="py-3 px-4 border text-center w-56">Actions</th>
+          </tr>
+        </thead>
 
-      <tbody>
-        <tr *ngFor="let pass of gatePasses; let i = index" class="border-b">
-          <td class="py-2 px-3 text-center">{{ i + 1 }}</td>
-          <td class="py-2 px-3">{{ pass.pass_number }}</td>
-          <td class="py-2 px-3">{{ pass.party_name }}</td>
-          <td class="py-2 px-3 capitalize">{{ pass.pass_type }}</td>
-          <td class="py-2 px-3">{{ getFormattedDate(pass.valid_from) }}</td>
-          <td class="py-2 px-3">{{ getFormattedDate(pass.valid_to) }}</td>
-<!-- 
-          <td class="py-2 px-3">{{ pass.valid_from }}</td>
-          <td class="py-2 px-3">{{ pass.valid_to  }}</td> -->
-          <td class="py-2 px-3 font-semibold" [ngClass]="getStatusColor(pass.status)">
-            {{ pass.status | titlecase }}
-          </td>
-          <td class="py-2 px-3 flex gap-2 justify-center">
-            <button *appRoleBased="['admin']" class="text-green-600 hover:underline" (click)="approve(pass.id)"
-              [disabled]="pass.status==='approved'">Approve</button>
-            <button *appRoleBased="['admin']" class="text-red-600 hover:underline" (click)="reject(pass.id)"
-              [disabled]="pass.status==='rejected'">Reject</button>
-            <button *appRoleBased="['admin']" class="text-gray-600 hover:underline"
-              (click)="delete(pass.id)">Delete</button>
-            <a *ngIf="pass.status === 'approved'" (click)="goToViewGatepassReciept(pass.pass_number)"
-              class="text-blue-600 hover:underline cursor-pointer">
-              View
-            </a>
-          </td>
-        </tr>
+        <tbody>
+          <tr
+            *ngFor="let pass of gatePasses; let i = index"
+            class="border-b hover:bg-gray-50 transition-all"
+          >
+            <td class="py-2 px-3 text-center">{{ i + 1 }}</td>
+            <td class="py-2 px-3 font-medium text-gray-800">
+              {{ pass.pass_number }}
+            </td>
+            <td class="py-2 px-3">{{ pass.party_name }}</td>
+            <td class="py-2 px-3 capitalize">{{ pass.pass_type }}</td>
+            <td class="py-2 px-3 text-center whitespace-nowrap">
+              {{ getFormattedDate(pass.valid_from) }}
+            </td>
+            <td class="py-2 px-3 text-center whitespace-nowrap">
+              {{ getFormattedDate(pass.valid_to) }}
+            </td>
 
-        <tr *ngIf="!loading && gatePasses.length === 0">
-          <td colspan="8" class="py-4 text-center text-gray-500">
-            No gate passes found.
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            <!-- Status -->
+            <td class="py-2 px-3 text-center">
+              <span
+                class="px-2 py-1 text-xs font-medium rounded-full inline-flex items-center justify-center min-w-[80px]"
+                [ngClass]="{
+                  'bg-green-100 text-green-700': pass.status === 'approved',
+                  'bg-yellow-100 text-yellow-700': pass.status === 'pending',
+                  'bg-red-100 text-red-700': pass.status === 'rejected'
+                }"
+              >
+                {{ pass.status | titlecase }}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td class="py-2 px-3 text-center">
+              <div class="flex items-center justify-center gap-4 whitespace-nowrap">
+                <button
+                  *appRoleBased="['admin']"
+                  class="text-green-600 hover:underline disabled:opacity-50"
+                  (click)="approve(pass.id)"
+                  [disabled]="pass.status === 'approved'"
+                >
+                  Approve
+                </button>
+                <button
+                  *appRoleBased="['admin']"
+                  class="text-red-600 hover:underline disabled:opacity-50"
+                  (click)="reject(pass.id)"
+                  [disabled]="pass.status === 'rejected'"
+                >
+                  Reject
+                </button>
+                <button
+                  *appRoleBased="['admin']"
+                  class="text-gray-600 hover:underline"
+                  (click)="delete(pass.id)"
+                >
+                  Delete
+                </button>
+                <a
+                  *ngIf="pass.status === 'approved'"
+                  (click)="goToViewGatepassReciept(pass.pass_number)"
+                  class="text-blue-600 hover:underline cursor-pointer"
+                >
+                  View
+                </a>
+              </div>
+            </td>
+          </tr>
+
+          <!-- No Data -->
+          <tr *ngIf="!loading && gatePasses.length === 0">
+            <td colspan="8" class="py-5 text-center text-gray-500">
+              No gate passes found.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>

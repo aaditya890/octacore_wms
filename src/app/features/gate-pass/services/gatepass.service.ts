@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { GatePass, GatePassItem, GatePassWithItems } from '../../../core/models/gatepass.model';
-
+import * as QRCode from 'qrcode';
 
 @Injectable({ providedIn: 'root' })
 export class GatepassService {
@@ -163,4 +163,9 @@ export class GatepassService {
     }
   }
 
+
+  async generateQr(passNo: string) {
+  const url = `${window.location.origin}/gate-pass/verify?code=${passNo}`;
+  return await QRCode.toDataURL(url); // ye Base64 image return karega
+}
 }

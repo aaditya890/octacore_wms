@@ -1,72 +1,133 @@
-<div class="min-h-screen bg-gray-50 flex justify-center items-center px-4">
-  <div class="w-full max-w-xl bg-white border rounded-2xl shadow-sm p-8">
-    <h1 class="text-2xl font-bold mb-2">Verify Gate Pass</h1>
-    <p class="text-gray-500 mb-6">Enter or scan a gate pass number to verify its validity</p>
+<div class="min-h-screen bg-gray-50 px-6 py-10 flex justify-center items-start">
+  <div class="w-full max-w-3xl bg-white border rounded-2xl shadow-md p-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold tracking-tight text-gray-800">
+        Verify Gate Pass
+      </h1>
+      <span class="text-sm text-gray-500">Secure Validation System</span>
+    </div>
 
-    <div class="flex gap-3 mb-6">
+    <!-- Info -->
+    <p class="text-gray-500 mb-6">
+      Enter or scan a gate pass number to verify its validity.
+    </p>
+
+    <!-- Input Section -->
+    <div class="flex flex-col md:flex-row gap-3 mb-6">
       <input
         [(ngModel)]="code"
         placeholder="Enter Pass Number (e.g. GP-2025-0001)"
-        class="input flex-1 border border-gray-300 rounded-lg px-3 py-2"
+        class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition-all"
       />
-      <button
-        (click)="verify()"
-        class="bg-black text-white px-5 py-2 rounded-lg hover:bg-gray-800"
-        [disabled]="loading"
-      >
-        Verify
-      </button>
-      <button
-        (click)="clear()"
-        class="border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-100"
-      >
-        Clear
-      </button>
+      <div class="flex gap-2">
+        <button
+          (click)="verify()"
+          class="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-all"
+          [disabled]="loading"
+        >
+          Verify
+        </button>
+        <button
+          (click)="clear()"
+          class="border border-gray-300 px-5 py-2 rounded-lg hover:bg-gray-100 transition-all"
+        >
+          Clear
+        </button>
+      </div>
     </div>
 
-    <div *ngIf="loading" class="text-center text-gray-500">Checking...</div>
+    <div class="flex justify-center mb-4">
+  <button
+    (click)="startScanner()"
+    class="border border-gray-300 px-5 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-100"
+  >
+    📷 Scan QR
+  </button>
+</div>
 
-    <div *ngIf="statusMessage" class="text-center mb-4">
-      <span [ngClass]="statusColor" class="font-medium">{{ statusMessage }}</span>
+<div id="reader" *ngIf="scanning" class="mt-4"></div>
+
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center text-gray-500 py-3">
+      Checking...
     </div>
 
-    <div *ngIf="!loading && result" class="border-t pt-4 mt-4">
-      <h2 class="font-semibold mb-2 text-lg text-gray-700">Gate Pass Details</h2>
+    <!-- Status Message -->
+    <div *ngIf="statusMessage" class="text-center mb-5">
+      <span [ngClass]="statusColor" class="font-semibold text-base">
+        {{ statusMessage }}
+      </span>
+    </div>
 
-      <div class="grid grid-cols-2 gap-y-2 text-sm">
+    <!-- Gate Pass Result -->
+    <div *ngIf="!loading && result" class="border-t pt-6 mt-4">
+      <h2 class="text-lg font-semibold mb-3 text-gray-800 flex items-center gap-2">
+        <span class="inline-block w-1.5 h-5 bg-gray-800 rounded"></span>
+        Gate Pass Details
+      </h2>
+
+      <div class="grid sm:grid-cols-2 gap-y-3 text-sm text-gray-700">
         <p><b>Pass No:</b> {{ result.pass_number }}</p>
         <p><b>Type:</b> {{ result.pass_type | titlecase }}</p>
         <p><b>Party:</b> {{ result.party_name }}</p>
         <p><b>Contact:</b> {{ result.party_contact }}</p>
         <p><b>Vehicle:</b> {{ result.vehicle_number || '—' }}</p>
-        <p><b>Status:</b> {{ result.status | titlecase }}</p>
+        <p>
+          <b>Status:</b>
+          <span
+            class="px-2 py-0.5 rounded-full text-xs font-medium"
+            [ngClass]="{
+              'bg-green-100 text-green-700': result.status === 'approved',
+              'bg-yellow-100 text-yellow-700': result.status === 'pending',
+              'bg-red-100 text-red-700': result.status === 'rejected'
+            }"
+          >
+            {{ result.status | titlecase }}
+          </span>
+        </p>
         <p><b>Valid From:</b> {{ getFormattedDate(result.valid_from) }}</p>
         <p><b>Valid To:</b> {{ getFormattedDate(result.valid_to) }}</p>
       </div>
 
-      <div *ngIf="result.items?.length" class="mt-6 border-t pt-4">
-        <h3 class="text-lg font-semibold mb-2 text-gray-800">Items in Gate Pass</h3>
-        <table class="w-full text-sm border rounded-lg overflow-hidden">
-          <thead class="bg-gray-100 text-gray-600">
-            <tr>
-              <th class="py-2 px-3 border">#</th>
-              <th class="py-2 px-3 border text-left">Item Name</th>
-              <th class="py-2 px-3 border">Quantity</th>
-              <th class="py-2 px-3 border">Unit</th>
-              <th class="py-2 px-3 border text-left">Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of result.items; let i = index" class="border-b">
-              <td class="py-2 px-3 text-center">{{ i + 1 }}</td>
-              <td class="py-2 px-3">{{ item.item_name }}</td>
-              <td class="py-2 px-3 text-center">{{ item.quantity }}</td>
-              <td class="py-2 px-3 text-center">{{ item.unit }}</td>
-              <td class="py-2 px-3">{{ item.description || '—' }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Items Table -->
+      <div *ngIf="result.items?.length" class="mt-8 border-t pt-4">
+        <h3 class="text-lg font-semibold mb-3 text-gray-800 flex items-center gap-2">
+          <span class="inline-block w-1.5 h-5 bg-gray-800 rounded"></span>
+          Items in Gate Pass
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm border rounded-xl overflow-hidden">
+            <thead class="bg-gray-100 text-gray-700">
+              <tr>
+                <th class="py-2 px-3 border text-center">#</th>
+                <th class="py-2 px-3 border text-left">Item Name</th>
+                <th class="py-2 px-3 border text-center">Quantity</th>
+                <th class="py-2 px-3 border text-center">Unit</th>
+                <th class="py-2 px-3 border text-left">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let item of result.items; let i = index"
+                class="border-b hover:bg-gray-50 transition-all"
+              >
+                <td class="py-2 px-3 text-center">{{ i + 1 }}</td>
+                <td class="py-2 px-3">{{ item.item_name }}</td>
+                <td class="py-2 px-3 text-center">{{ item.quantity }}</td>
+                <td class="py-2 px-3 text-center">{{ item.unit }}</td>
+                <td class="py-2 px-3">{{ item.description || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+    </div>
+
+    <!-- No Result -->
+    <div *ngIf="!loading && !result && !statusMessage" class="text-center py-10 text-gray-400">
+      No gate pass verified yet.
     </div>
   </div>
 </div>

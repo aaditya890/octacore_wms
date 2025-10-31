@@ -20,12 +20,19 @@ export class GatepassReceiptComponent {
 
   data: GatePassWithItems | null = null;
   loading = true;
+  qrImage: string | null = null;
 
   async ngOnInit() {
     const passNum = this.route.snapshot.paramMap.get('pass_number');
-    if (passNum) await this.loadData(passNum);
-  }
+    this.qrImage = history.state?.qr || null;  // 👈 QR fetch from route state
 
+    if (passNum) await this.loadData(passNum);
+
+    // Agar direct page refresh se aaye (state null)
+    if (!this.qrImage && passNum) {
+      this.qrImage = await this.svc.generateQr(passNum);
+    }
+  }
   async loadData(passNum: string) {
     this.loading = true;
     this.data = await this.svc.findByPassNumber(passNum);
@@ -40,7 +47,7 @@ export class GatepassReceiptComponent {
     this.router.navigate(['/gatepass']);
   }
 
-  getFormattedDate(dateStr:any): string {
+  getFormattedDate(dateStr: any): string {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
     return new Intl.DateTimeFormat('en-IN', {

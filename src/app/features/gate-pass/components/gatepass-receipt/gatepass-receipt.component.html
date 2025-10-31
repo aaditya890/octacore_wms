@@ -1,76 +1,113 @@
-<div class="min-h-screen bg-gray-50 px-8 py-10">
-  <div class="max-w-3xl mx-auto bg-white border rounded-2xl shadow-sm p-8" *ngIf="!loading; else loadingTpl">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Gate Pass Receipt</h1>
-      <div class="flex gap-3">
-        <button (click)="print()" class="border border-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100">🖨️ Print</button>
-        <button (click)="back()" class="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800">Back</button>
-      </div>
-    </div>
+<div class="min-h-screen bg-gray-50 px-6 py-10">
+  <div
+    class="max-w-4xl mx-auto bg-white border rounded-2xl shadow-md p-8 transition-all"
+    *ngIf="!loading; else loadingTpl"
+  >
+    <div class="flex justify-between items-start mb-8">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-800">Gate Pass Receipt</h1>
+    <p class="text-gray-500 text-sm">Pass No: {{ data?.pass_number }}</p>
+  </div>
 
+  <div class="text-center">
+    <img *ngIf="qrImage" [src]="qrImage" alt="QR Code"
+      class="w-24 h-24 border rounded-lg shadow-sm mx-auto" />
+    <p class="text-xs text-gray-500 mt-1">📷 Scan to Verify</p>
+  </div>
+</div>
+
+
+    <!-- Receipt Details -->
     <div *ngIf="data; else notFound">
-      <div class="mb-4">
+      <!-- Top Summary -->
+      <div class="grid md:grid-cols-3 sm:grid-cols-2 gap-y-3 mb-6 text-gray-700">
         <p><b>Pass No:</b> {{ data.pass_number }}</p>
         <p><b>Type:</b> {{ data.pass_type | titlecase }}</p>
         <p>
           <b>Status:</b>
-          <span class="font-semibold"
+          <span
+            class="px-2 py-0.5 rounded-full text-xs font-medium"
             [ngClass]="{
-              'text-green-600': data.status === 'approved',
-              'text-red-600': data.status === 'rejected',
-              'text-yellow-600': data.status === 'pending'
+              'bg-green-100 text-green-700': data.status === 'approved',
+              'bg-yellow-100 text-yellow-700': data.status === 'pending',
+              'bg-red-100 text-red-700': data.status === 'rejected'
             }"
-            >{{ data.status | titlecase }}</span
           >
+            {{ data.status | titlecase }}
+          </span>
         </p>
       </div>
 
-      <div class="grid grid-cols-2 gap-3 mb-5">
-        <div><b>Party Name:</b> {{ data.party_name }}</div>
-        <div><b>Contact:</b> {{ data.party_contact || '—' }}</div>
-        <div><b>Vehicle:</b> {{ data.vehicle_number || '—' }}</div>
-        <div><b>Purpose:</b> {{ data.purpose }}</div>
-        <div><b>Valid From:</b> {{ getFormattedDate(data.valid_from) }}</div>
-        <div><b>Valid To:</b> {{ getFormattedDate(data.valid_to) }}</div>
+      <!-- Party & Info Section -->
+      <div class="border-t pt-5 grid sm:grid-cols-2 gap-y-2 mb-6 text-gray-700 text-sm">
+        <p><b>Party Name:</b> {{ data.party_name }}</p>
+        <p><b>Contact:</b> {{ data.party_contact || '—' }}</p>
+        <p><b>Vehicle:</b> {{ data.vehicle_number || '—' }}</p>
+        <p><b>Purpose:</b> {{ data.purpose }}</p>
+        <p><b>Valid From:</b> {{ getFormattedDate(data.valid_from) }}</p>
+        <p><b>Valid To:</b> {{ getFormattedDate(data.valid_to) }}</p>
       </div>
 
-      <div *ngIf="data.items?.length" class="mt-6 border-t pt-4">
-        <h2 class="font-semibold mb-2 text-lg text-gray-800">Items in Gate Pass</h2>
-        <table class="w-full text-sm border rounded-lg overflow-hidden">
-          <thead class="bg-gray-100 text-gray-600">
-            <tr>
-              <th class="py-2 px-3 border">#</th>
-              <th class="py-2 px-3 border text-left">Item Name</th>
-              <th class="py-2 px-3 border">Quantity</th>
-              <th class="py-2 px-3 border">Unit</th>
-              <th class="py-2 px-3 border text-left">Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of data.items; let i = index" class="border-b">
-              <td class="py-2 px-3 text-center">{{ i + 1 }}</td>
-              <td class="py-2 px-3">{{ item.item_name }}</td>
-              <td class="py-2 px-3 text-center">{{ item.quantity }}</td>
-              <td class="py-2 px-3 text-center">{{ item.unit }}</td>
-              <td class="py-2 px-3">{{ item.description || '—' }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Item Table -->
+      <div *ngIf="data.items?.length" class="mt-8 border-t pt-4">
+        <h2
+          class="text-lg font-semibold mb-3 text-gray-800 flex items-center gap-2"
+        >
+          <span class="inline-block w-1.5 h-5 bg-gray-800 rounded"></span>
+          Items in Gate Pass
+        </h2>
+
+        <div class="overflow-x-auto">
+          <table
+            class="min-w-full text-sm border rounded-xl overflow-hidden shadow-sm"
+          >
+            <thead class="bg-gray-100 text-gray-700">
+              <tr>
+                <th class="py-2 px-3 border text-center">#</th>
+                <th class="py-2 px-3 border text-left">Item Name</th>
+                <th class="py-2 px-3 border text-center">Quantity</th>
+                <th class="py-2 px-3 border text-center">Unit</th>
+                <th class="py-2 px-3 border text-left">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let item of data.items; let i = index"
+                class="border-b hover:bg-gray-50 transition-all"
+              >
+                <td class="py-2 px-3 text-center">{{ i + 1 }}</td>
+                <td class="py-2 px-3">{{ item.item_name }}</td>
+                <td class="py-2 px-3 text-center">{{ item.quantity }}</td>
+                <td class="py-2 px-3 text-center">{{ item.unit }}</td>
+                <td class="py-2 px-3">{{ item.description || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div class="mt-5 border-t pt-3 text-sm text-gray-500">
+      <!-- Footer Info -->
+      <div class="mt-6 border-t pt-4 text-sm text-gray-600">
         <p><b>Created At:</b> {{ getFormattedDate(data.created_at) }}</p>
         <p><b>Notes:</b> {{ data.notes || '—' }}</p>
       </div>
     </div>
 
+    <!-- Not Found -->
     <ng-template #notFound>
-      <p class="text-center text-red-500">❌ No details found for this gate pass.</p>
+      <div
+        class="text-center py-12 border border-dashed border-gray-300 rounded-xl"
+      >
+        <p class="text-red-500 text-base font-medium">
+          ❌ No details found for this gate pass.
+        </p>
+      </div>
     </ng-template>
   </div>
 
+  <!-- Loading Template -->
   <ng-template #loadingTpl>
-    <div class="text-center py-20 text-gray-500">
+    <div class="text-center py-24 text-gray-500">
       <mat-spinner diameter="40"></mat-spinner>
       <p class="mt-3">Loading gate pass details...</p>
     </div>

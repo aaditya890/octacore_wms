@@ -3,6 +3,7 @@ import { GatepassService } from '../../services/gatepass.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { GatePassWithItems } from '../../../../core/models/gatepass.model';
+import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
 
 @Component({
   selector: 'app-gatepass-verify',
@@ -17,6 +18,7 @@ export class GatepassVerifyComponent implements OnInit {
   loading = false;
   statusMessage = '';
   statusColor = '';
+  scanning = false;
 
   constructor(private svc: GatepassService) {}
 
@@ -47,12 +49,11 @@ export class GatepassVerifyComponent implements OnInit {
 
     const isApproved = res.status === 'approved';
     const isWithinRange =
-      now.getTime() >= validFrom.getTime() &&
-      now.getTime() <= validTo.getTime();
+      now.getTime() >= validFrom.getTime() && now.getTime() <= validTo.getTime();
 
     if (isApproved && isWithinRange) {
       this.result = res;
-      this.statusMessage = 'Gate Pass Verified';
+      this.statusMessage = '✅ Gate Pass Verified Successfully';
       this.statusColor = 'text-green-600';
     } else if (isApproved && now > validTo) {
       this.showInvalid('⚠️ Gate Pass Expired.');
@@ -86,5 +87,32 @@ export class GatepassVerifyComponent implements OnInit {
       minute: '2-digit',
       hour12: true
     }).format(date);
+  }
+
+  // ✅ FIXED SCANNER FUNCTION
+  startScanner() {
+    this.scanning = true;
+
+    const config = {
+      fps: 10,
+      qrbox: 250,
+      supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+    };
+
+    // 👇 third param 'verbose' = false to fix your first error
+    const scanner = new Html5QrcodeScanner('reader', config, false);
+
+    // 👇 second param (error callback) added to fix second error
+    scanner.render(
+      async (decodedText: string) => {
+        this.code = decodedText.split('code=')[1] || decodedText;
+        await this.verify();
+        scanner.clear(); // stop camera
+        this.scanning = false;
+      },
+      (error) => {
+        console.warn('QR Scan Error:', error);
+      }
+    );
   }
 }

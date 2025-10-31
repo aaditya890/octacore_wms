@@ -59,18 +59,30 @@ async onSubmit() {
 
   const { items, ...gatepass } = this.form.value;
 
- 
   const payload = {
     ...gatepass,
     valid_from: new Date(gatepass.valid_from).toISOString(),
     valid_to: new Date(gatepass.valid_to).toISOString(),
   };
 
-  await this.svc.createGatePass(payload, items);
+  // 1️⃣ Create pass
+  const created = await this.svc.createGatePass(payload, items);
+
+  if (created) {
+    // 2️⃣ Generate QR Code for that pass
+    const qrUrl = await this.svc.generateQr(created.pass_number);
+
+    // 3️⃣ Pass QR via navigation state to receipt
+    this.router.navigate(
+      ['/', AppRoutes.GATE_PASS, 'receipt', created.pass_number],
+      { state: { qr: qrUrl } }
+    );
+  }
+
   this.form.reset();
   this.items.clear();
-  this.router.navigate(['/', AppRoutes.GATE_PASS,]);
 }
+
 
 
 }
