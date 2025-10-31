@@ -19,6 +19,7 @@ export class GatepassVerifyComponent implements OnInit {
   statusMessage = '';
   statusColor = '';
   scanning = false;
+  scanner: any;
 
   constructor(private svc: GatepassService) {}
 
@@ -53,7 +54,7 @@ export class GatepassVerifyComponent implements OnInit {
 
     if (isApproved && isWithinRange) {
       this.result = res;
-      this.statusMessage = 'Gate Pass Verified Successfully';
+      this.statusMessage = '✅ Gate Pass Verified Successfully';
       this.statusColor = 'text-green-600';
     } else if (isApproved && now > validTo) {
       this.showInvalid('⚠️ Gate Pass Expired.');
@@ -89,30 +90,50 @@ export class GatepassVerifyComponent implements OnInit {
     }).format(date);
   }
 
-  // ✅ FIXED SCANNER FUNCTION
+  // ✅ FIXED SCANNER FUNCTION (full screen + back camera)
   startScanner() {
     this.scanning = true;
 
+    // Destroy previous instance if running
+    if (this.scanner) {
+      this.scanner.clear().catch(() => {});
+      this.scanner = null;
+    }
+
     const config = {
       fps: 10,
-      qrbox: 250,
-      supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+      qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+        const minEdgePercentage = 0.8; // 80% of screen width
+        const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+        const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+        return { width: qrboxSize, height: qrboxSize };
+      },
+      rememberLastUsedCamera: true,
+      supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
     };
 
-    // 👇 third param 'verbose' = false to fix your first error
-    const scanner = new Html5QrcodeScanner('reader', config, false);
+    this.scanner = new Html5QrcodeScanner('reader', config, false);
 
-    // 👇 second param (error callback) added to fix second error
-    scanner.render(
+    this.scanner.render(
       async (decodedText: string) => {
+        console.log('✅ Scanned:', decodedText);
         this.code = decodedText.split('code=')[1] || decodedText;
         await this.verify();
-        scanner.clear(); // stop camera
-        this.scanning = false;
+        this.stopScanner();
       },
-      (error) => {
+      (error:Error) => {
         console.warn('QR Scan Error:', error);
       }
     );
+  }
+
+  stopScanner() {
+    if (this.scanner) {
+      this.scanner.clear().then(() => {
+        this.scanning = false;
+      });
+    } else {
+      this.scanning = false;
+    }
   }
 }
