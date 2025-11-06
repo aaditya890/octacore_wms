@@ -2,7 +2,7 @@ export interface Transaction {
   id?: string;
   transaction_number: string;
   transaction_type: "inward" | "outward" | "adjustment" | "transfer";
-  item_id?: string; // can be null for manual entries
+  item_id?: any; // can be null for manual entries
   quantity: number;
   unit_price?: number;
   total_amount?: number;

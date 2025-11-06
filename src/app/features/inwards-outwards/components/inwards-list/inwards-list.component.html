@@ -1,48 +1,99 @@
 <div class="p-8 bg-white min-h-screen" *ngIf="inwardForm">
-  <!-- Header -->
   <h1 class="text-3xl font-bold mb-2 border-b-4 border-black inline-block pb-1">
     Inward Entry
   </h1>
   <p class="text-gray-600 mb-6">Record inward inventory movement</p>
 
-  <!-- ✅ Entire Form -->
-  <form
-    [formGroup]="inwardForm"
-    (ngSubmit)="saveInwardEntry()"
-    class="grid grid-cols-1 md:grid-cols-2 gap-6"
-  >
-    <!-- 🔹 Checkbox section -->
+  <form [formGroup]="inwardForm" (ngSubmit)="saveInwardEntry()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <!-- 🔹 OPTIONS -->
     <div class="md:col-span-2 flex flex-col gap-2">
       <label class="font-semibold text-sm mb-1">Options:</label>
 
       <label class="flex items-center gap-2">
-        <input type="checkbox" formControlName="add_to_inventory" />
-        <span>Add to Inventory</span>
+        <input type="radio" name="mode" value="existing" (change)="setMode('existing')" [checked]="inwardForm.get('use_existing_item')?.value" />
+        <span>Use Existing Inventory Item</span>
       </label>
 
       <label class="flex items-center gap-2">
-        <input type="checkbox" formControlName="is_repairing" />
-        <span>Repairing Item</span>
+        <input type="radio" name="mode" value="new" (change)="setMode('new')" />
+        <span>Add New Inventory Item</span>
       </label>
 
       <label class="flex items-center gap-2">
-        <input type="checkbox" formControlName="is_other" />
-        <span>Other Item</span>
+        <input type="radio" name="mode" value="repairing" (change)="setMode('repairing')" />
+        <span>Add Repairing Item</span>
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="mode" value="other" (change)="setMode('other')" />
+        <span>Add Other Item</span>
       </label>
     </div>
 
-    <!-- ✅ Inventory Fields -->
+    <!-- 🔹 EXISTING ITEM SECTION -->
+    <div *ngIf="inwardForm.get('use_existing_item')?.value" class="md:col-span-2">
+      <label class="block text-sm font-semibold mb-1">Select Existing Item *</label>
+      <div class="relative">
+        <input
+          type="text"
+          placeholder="Type to search existing items..."
+          (input)="onItemInput($event)"
+          [value]="inwardForm.get('inv_item_name')?.value"
+          class="w-full border border-gray-300 rounded-md p-2"
+        />
+        <ul
+          *ngIf="filteredItems.length > 0"
+          class="absolute left-0 right-0 border border-gray-300 bg-white rounded-md mt-1 max-h-48 overflow-y-auto shadow-md z-50"
+        >
+          <li
+            *ngFor="let item of filteredItems"
+            (click)="selectItem(item)"
+            class="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+          >
+            {{ item.item_name }} — <span class="text-sm text-gray-500">({{ item.category }})</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Mark existing as repairing -->
+      <div class="mt-3 flex items-center gap-2">
+        <input type="checkbox" formControlName="is_repairing" />
+        <span>Mark this existing item as Repairing</span>
+      </div>
+    </div>
+
+    <!-- 🔹 NEW / REPAIRING / OTHER ENTRY -->
     <div
-      *ngIf="inwardForm.get('add_to_inventory')?.value"
-      class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 border border-gray-300 rounded-md p-4 bg-gray-50"
+      *ngIf="!inwardForm.get('use_existing_item')?.value"
+      class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 border border-gray-300 rounded-md p-4"
+      [ngClass]="{
+        'bg-gray-50': inwardForm.get('add_to_inventory')?.value,
+        'bg-yellow-50': inwardForm.get('is_repairing')?.value,
+        'bg-blue-50': inwardForm.get('is_other')?.value
+      }"
     >
-      <h3 class="font-semibold text-lg md:col-span-2">Inventory Details</h3>
+      <h3 class="font-semibold text-lg md:col-span-2">
+        {{
+          inwardForm.get('is_repairing')?.value
+            ? 'Repairing Item Details'
+            : inwardForm.get('is_other')?.value
+            ? 'Other Item Details'
+            : 'New Inventory Details'
+        }}
+      </h3>
 
       <div>
         <label class="block text-sm font-semibold mb-1">Item Name *</label>
         <input
           type="text"
-          formControlName="inv_item_name"
+          [formControlName]="
+            inwardForm.get('is_repairing')?.value
+              ? 'repairing_item_name'
+              : inwardForm.get('is_other')?.value
+              ? 'other_item_name'
+              : 'inv_item_name'
+          "
           placeholder="Enter item name"
           class="w-full border border-gray-300 rounded-md p-2"
         />
@@ -50,27 +101,25 @@
 
       <div>
         <label class="block text-sm font-semibold mb-1">Category *</label>
-        <select
-          formControlName="inv_category"
-          class="w-full border border-gray-300 rounded-md p-2"
-        >
+        <select formControlName="inv_category" class="w-full border border-gray-300 rounded-md p-2">
           <option value="">Select Category</option>
           <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
         </select>
       </div>
 
-      <div>
+      <!-- Only one Supplier input -->
+      <div class="md:col-span-2">
         <label class="block text-sm font-semibold mb-1">Supplier</label>
-        <select
-          formControlName="inv_supplier"
+        <input
+          type="text"
+          formControlName="party_name"
+          placeholder="Enter supplier name"
           class="w-full border border-gray-300 rounded-md p-2"
-        >
-          <option value="">Select Supplier</option>
-          <option *ngFor="let s of suppliers" [value]="s">{{ s }}</option>
-        </select>
+          (input)="autoFillSupplier()"
+        />
       </div>
 
-      <div>
+      <div class="md:col-span-2">
         <label class="block text-sm font-semibold mb-1">Description</label>
         <textarea
           formControlName="inv_description"
@@ -81,138 +130,25 @@
       </div>
     </div>
 
-    <!-- 🔹 Select / Repairing / Other Fields -->
-    <div
-      *ngIf="
-        !inwardForm.get('add_to_inventory')?.value &&
-        inwardForm.get('is_repairing')?.value
-      "
-    >
-      <label class="block text-sm font-semibold mb-1"
-        >Repairing Item Name *</label
-      >
-      <input
-        type="text"
-        formControlName="repairing_item_name"
-        placeholder="Enter repairing item name"
-        class="w-full border border-gray-300 rounded-md p-2"
-      />
-    </div>
-
-    <div
-      *ngIf="
-        !inwardForm.get('add_to_inventory')?.value &&
-        inwardForm.get('is_other')?.value
-      "
-    >
-      <label class="block text-sm font-semibold mb-1">Other Item Name *</label>
-      <input
-        type="text"
-        formControlName="other_item_name"
-        placeholder="Enter other item name"
-        class="w-full border border-gray-300 rounded-md p-2"
-      />
-    </div>
-
-    <div
-      *ngIf="
-        !inwardForm.get('add_to_inventory')?.value &&
-        !inwardForm.get('is_repairing')?.value &&
-        !inwardForm.get('is_other')?.value &&
-        !isNewItem
-      "
-    >
-      <label class="block text-sm font-semibold mb-1">Select Item *</label>
-      <div class="relative">
-        <input
-          type="text"
-          placeholder="Type item name..."
-          (input)="onItemInput($event)"
-          [value]="selectedItemName"
-          class="w-full border border-gray-300 rounded-md p-2"
-        />
-
-        <ul
-          *ngIf="filteredItems.length > 0"
-          class="absolute left-0 right-0 border border-gray-300 bg-white rounded-md mt-1 max-h-40 overflow-y-auto shadow-md z-50"
-        >
-          <li
-            *ngFor="let item of filteredItems"
-            (click)="selectItem(item)"
-            class="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-          >
-            {{ item.item_name }}
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <div
-      *ngIf="
-        !inwardForm.get('add_to_inventory')?.value &&
-        isNewItem &&
-        !inwardForm.get('is_repairing')?.value &&
-        !inwardForm.get('is_other')?.value
-      "
-    >
-      <label class="block text-sm font-semibold mb-1">Item Name (Note)</label>
-      <input
-        type="text"
-        placeholder="Enter item name (note only)"
-        formControlName="notes"
-        class="w-full border border-gray-300 rounded-md p-2"
-      />
-      <small class="text-gray-500"
-        >* This item will not be added to inventory</small
-      >
-    </div>
-
     <!-- 🔹 Quantity -->
     <div>
       <label class="block text-sm font-semibold mb-1">Quantity *</label>
-      <input
-        type="number"
-        formControlName="quantity"
-        class="w-full border border-gray-300 rounded-md p-2"
-      />
+      <input type="number" formControlName="quantity" class="w-full border border-gray-300 rounded-md p-2" />
     </div>
 
-    <!-- 🔹 Unit -->
     <div>
       <label class="block text-sm font-semibold mb-1">Unit *</label>
-      <select
-        formControlName="unit"
-        class="w-full border border-gray-300 rounded-md p-2"
-      >
-        <option value="" disabled selected>Select Unit</option>
-        <option *ngFor="let unit of unitOptions" [value]="unit">
-          {{ unit }}
-        </option>
+      <select formControlName="unit" class="w-full border border-gray-300 rounded-md p-2">
+        <option value="">Select Unit</option>
+        <option *ngFor="let unit of unitOptions" [value]="unit">{{ unit }}</option>
       </select>
     </div>
 
-    <!-- 🔹 Rate per unit -->
     <div>
       <label class="block text-sm font-semibold mb-1">Rate per Unit</label>
-      <input
-        type="number"
-        formControlName="unit_price"
-        class="w-full border border-gray-300 rounded-md p-2"
-      />
+      <input type="number" formControlName="unit_price" class="w-full border border-gray-300 rounded-md p-2" />
     </div>
 
-    <!-- 🔹 Supplier -->
-    <div>
-      <label class="block text-sm font-semibold mb-1">Supplier *</label>
-      <input
-        type="text"
-        formControlName="party_name"
-        placeholder="Enter supplier name"
-        class="w-full border border-gray-300 rounded-md p-2"
-      />
-    </div>
-
-    <!-- 🔹 Reference -->
     <div>
       <label class="block text-sm font-semibold mb-1">Reference (PO/Invoice) *</label>
       <input
@@ -221,20 +157,13 @@
         placeholder="PO or Invoice Number"
         class="w-full border border-gray-300 rounded-md p-2"
       />
-      <small class="text-gray-500">* Only letters and numbers allowed</small>
     </div>
 
-    <!-- 🔹 Date -->
     <div>
       <label class="block text-sm font-semibold mb-1">Transaction Date</label>
-      <input
-        type="date"
-        formControlName="transaction_date"
-        class="w-full border border-gray-300 rounded-md p-2"
-      />
+      <input type="date" formControlName="transaction_date" class="w-full border border-gray-300 rounded-md p-2" />
     </div>
 
-    <!-- 🔹 Remarks -->
     <div class="md:col-span-2">
       <label class="block text-sm font-semibold mb-1">Remarks</label>
       <textarea
@@ -245,7 +174,6 @@
       ></textarea>
     </div>
 
-    <!-- 🔹 Buttons -->
     <div class="flex justify-end gap-4 md:col-span-2 mt-4">
       <button
         type="button"
@@ -254,10 +182,7 @@
       >
         Cancel
       </button>
-      <button
-        type="submit"
-        class="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800"
-      >
+      <button type="submit" class="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800">
         Save Inward Entry
       </button>
     </div>

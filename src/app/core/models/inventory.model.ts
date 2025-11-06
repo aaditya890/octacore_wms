@@ -16,7 +16,12 @@ export interface InventoryItem {
   created_by?: string
   created_at?: string
   updated_at?: string
+
+  // 👇 new flags
+  is_repairing?: boolean
+  is_other?: boolean
 }
+
 
 export interface InventoryFilter {
   category?: string

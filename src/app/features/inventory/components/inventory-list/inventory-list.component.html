@@ -15,7 +15,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white border border-gray-200 rounded-xl p-6 grid grid-cols-1 md:grid-cols-4 gap-5 items-end">
+    <div class="bg-white border border-gray-200 rounded-xl p-6 grid grid-cols-1 md:grid-cols-5 gap-5 items-end">
       <div class="md:col-span-2">
         <label class="block text-sm font-semibold text-gray-800 mb-1">Search</label>
         <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" placeholder="Search by name or code..."
@@ -44,7 +44,19 @@
         </select>
       </div>
 
-      <div class="md:col-span-4 flex gap-3">
+      <!-- ✅ New filter for Item Type -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-800 mb-1">Item Type</label>
+        <select [(ngModel)]="selectedType" (change)="onFilterChange()"
+          class="w-full px-3 py-2.5 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-black focus:border-black">
+          <option value="">All</option>
+          <option value="repairing">Repairing</option>
+          <option value="other">Other</option>
+          <option value="normal">Normal</option>
+        </select>
+      </div>
+
+      <div class="md:col-span-5 flex gap-3">
         <button (click)="onSearch()"
           class="px-5 py-2.5 bg-black text-white rounded-md font-semibold border border-black hover:bg-white hover:text-black transition-all">
           Apply
@@ -54,23 +66,6 @@
           Clear
         </button>
       </div>
-    </div>
-
-    <!-- Loading -->
-    <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-16">
-      <div class="animate-spin h-10 w-10 border-4 border-black border-t-transparent rounded-full mb-4"></div>
-      <p class="text-gray-600">Loading inventory...</p>
-    </div>
-
-    <!-- Empty -->
-    <div *ngIf="!isLoading && filteredItems.length === 0"
-      class="bg-white border border-gray-200 rounded-xl p-12 text-center">
-      <p class="text-lg font-semibold text-black mb-2">No items found</p>
-      <p class="text-gray-600 mb-6">Try adjusting filters or add a new item</p>
-      <button *appRoleBased="['admin']" (click)="navigateToAdd()"
-        class="px-5 py-2.5 bg-black text-white rounded-md font-semibold border border-black hover:bg-white hover:text-black transition-all">
-        Add Item
-      </button>
     </div>
 
     <!-- Table -->
@@ -96,22 +91,31 @@
             <tr *ngFor="let item of filteredItems; let i = index"
               class="bg-white hover:bg-gray-50 border-b border-gray-100 transition">
               <td class="text-center">{{ i + 1 }}</td>
+
+              <!-- ✅ Item name with badge -->
               <td (click)="openDetailDialog(item,i)"
-                class="px-6 py-3 text-sm font-semibold text-black cursor-pointer hover:underline">
+                class="px-6 py-3 text-sm font-semibold text-black cursor-pointer hover:underline flex items-center gap-2">
                 {{ item.item_name }}
+                <ng-container *ngIf="item.is_repairing">
+                  <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 border border-yellow-400">
+                    Repairing
+                  </span>
+                </ng-container>
+                <ng-container *ngIf="item.is_other">
+                  <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 border border-blue-400">
+                    Other
+                  </span>
+                </ng-container>
               </td>
 
               <td class="px-6 py-3 text-sm text-gray-700">{{ item.category }}</td>
               <td class="px-6 py-3 text-sm font-semibold">{{ item.quantity }}</td>
               <td class="px-6 py-3 text-sm text-gray-700">{{ item.unit }}</td>
-              <td class="px-6 py-3 text-sm text-gray-700">
-                ₹{{ item.unit_price.toFixed(2) }}
-              </td>
+              <td class="px-6 py-3 text-sm text-gray-700">₹{{ item.unit_price.toFixed(2) }}</td>
 
               <!-- Status -->
               <td class="px-6 py-3">
-                <span
-                  class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs font-semibold rounded-full border"
+                <span class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs font-semibold rounded-full border"
                   [ngClass]="{
                     'border-green-500 text-green-700 bg-green-50': item.status === 'active',
                     'border-gray-400 text-gray-700 bg-gray-100': item.status !== 'active'
@@ -122,8 +126,7 @@
 
               <!-- Stock -->
               <td class="px-6 py-3">
-                <span
-                  class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs font-semibold rounded-full border"
+                <span class="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs font-semibold rounded-full border"
                   [ngClass]="{
                     'border-green-500 text-green-700 bg-green-50': getStockStatus(item) === 'In Stock',
                     'border-yellow-500 text-yellow-700 bg-yellow-50': getStockStatus(item) === 'Low Stock',

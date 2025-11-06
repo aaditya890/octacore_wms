@@ -126,7 +126,7 @@ export class GatepassVerifyComponent implements OnInit {
       }
     );
   }
-
+  
   stopScanner() {
     if (this.scanner) {
       this.scanner.clear().then(() => {
