@@ -29,11 +29,9 @@ export class InwardsListComponent {
   filteredItems: any[] = [];
   selectedItem: any = null;
   currentUser: any;
-
   unitOptions = ['pcs', 'kg', 'ltr', 'box', 'carton', 'meter'];
   categories = ['Electronics', 'Furniture', 'Stationery', 'Tools', 'Raw Materials', 'Finished Goods'];
   suppliers = ['Steel Corp', 'ABC Supplies', 'Prime Traders', 'Global Co'];
-
   inwardForm!: FormGroup;
 
   constructor() {
@@ -105,8 +103,7 @@ export class InwardsListComponent {
     });
   }
 
-
-  // ✅ Main Save Function (Final + Stable)
+  // ✅ Main Save Function (Final with Repairing Fix)
   async saveInwardEntry() {
     if (this.inwardForm.invalid) {
       this.notification.error('Please fill all required fields.');
@@ -124,8 +121,7 @@ export class InwardsListComponent {
 
     // ✅ CASE 2: Add New / Repairing / Other → insert new record in inventory
     if (f.add_to_inventory || f.is_repairing || f.is_other) {
-      // ✅ always valid for DB constraint
-      let itemStatus = 'active';
+      let itemStatus = 'active'; // always valid for DB constraint
 
       // ✅ Ensure name always comes correctly
       const invItemName =
@@ -156,7 +152,7 @@ export class InwardsListComponent {
         unit_price: Number(f.unit_price) || 0,
         location: 'Main Warehouse',
         supplier: supplierName,
-        status: itemStatus, // ✅ DB constraint safe
+        status: itemStatus,
         last_restocked: new Date().toISOString(),
         created_by: this.currentUser?.id || null,
         created_at: new Date().toISOString(),
@@ -186,7 +182,7 @@ export class InwardsListComponent {
       f.party_name = existing?.supplier || 'Unknown Supplier';
     }
 
-    // ✅ If existing item & “Mark as Repairing” checked → update inventory
+    // ✅ If existing item & “Mark as Repairing” checked → update repairing flag only
     if (f.use_existing_item && f.is_repairing && f.item_id) {
       try {
         await this.inventoryService.updateInventory(f.item_id, {
@@ -222,8 +218,8 @@ export class InwardsListComponent {
 
     const success = await this.inoutService.addTransaction(newTransaction);
 
-    // ✅ Update stock if using existing item
-    if (success && f.use_existing_item) {
+    // ✅ Update stock only if not marking repairing
+    if (success && f.use_existing_item && !f.is_repairing) {
       await this.inoutService.syncInventoryStock(newTransaction);
     }
 
@@ -247,4 +243,5 @@ export class InwardsListComponent {
     const val = this.inwardForm.get('party_name')?.value;
     if (val) this.inwardForm.patchValue({ inv_supplier: val });
   }
+
 }

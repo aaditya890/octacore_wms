@@ -12,12 +12,13 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule,RouterLink,RouterModule],
+  imports: [CommonModule, RouterLink, RouterModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
+
 export class SidebarComponent {
-   private router = inject(Router)
+  private router = inject(Router)
 
   routes = AppRoutes
   isCollapsed = signal<boolean>(false)
@@ -36,8 +37,7 @@ export class SidebarComponent {
     },
     {
       label: "Purchase Indents",
-      route: ["/"],
-      // route: ["/", this.routes.PURCHASE_INDENTS],
+      route: ["/", this.routes.PURCHASE_INDENTS],
       icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
       badge: 3,
     },
@@ -48,8 +48,7 @@ export class SidebarComponent {
     },
     {
       label: "Inwards/Outwards",
-       route: ["/"],
-      // route: ["/", this.routes.INOUT],
+      route: ["/", this.routes.INOUT],
       icon: "M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4",
     },
     {
@@ -70,7 +69,7 @@ export class SidebarComponent {
   ]
 
   toggleCollapse() {
-    this.isCollapsed.update((val:any) => !val)
+    this.isCollapsed.update((val: any) => !val)
   }
 
   isActiveRoute(route: string[]): boolean {

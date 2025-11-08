@@ -3,7 +3,6 @@
     Inward Entry
   </h1>
   <p class="text-gray-600 mb-6">Record inward inventory movement</p>
-
   <form [formGroup]="inwardForm" (ngSubmit)="saveInwardEntry()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
     <!-- 🔹 OPTIONS -->
@@ -92,8 +91,7 @@
               ? 'repairing_item_name'
               : inwardForm.get('is_other')?.value
               ? 'other_item_name'
-              : 'inv_item_name'
-          "
+              : 'inv_item_name'"
           placeholder="Enter item name"
           class="w-full border border-gray-300 rounded-md p-2"
         />

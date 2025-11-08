@@ -5,10 +5,12 @@ sb inward/outwards me form validation
 pagination bcha hai invenoty or indents me 
 or bill invoice wla bhi bcha hai 
 
+ 
+- inventory me raipring itme delete krne m vo ht jay badge or 
+vha mark as reapring done k option aajy to uske bad vo usme shift ho jyega 
 
-inout me incward me reipaiirn or other item add ni horha hai 
-or exiting itme me bhi raipiring item add ni horha hai 
 
+- add  supplier bacha hai or ye sb fileds ko db me dalna hai
 
 categories 
 suppiler
