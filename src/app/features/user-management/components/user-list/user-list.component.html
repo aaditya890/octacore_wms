@@ -1,1 +1,97 @@
-<p>user-list works!</p>
+<div class="p-6 w-full">
+
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Users</h1>
+
+    <button
+      routerLink="/user-management/create"
+      class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+    >
+      + Add User
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <input 
+      type="text"
+      [(ngModel)]="filters.search_term"
+      (input)="loadUsers()"
+      placeholder="Search by name or email"
+      class="p-3 border rounded-md"
+    />
+
+    <select
+      [(ngModel)]="filters.role"
+      (change)="loadUsers()"
+      class="p-3 border rounded-md bg-white"
+    >
+      <option value="">All Roles</option>
+      <option value="admin">Admin</option>
+      <option value="manager">Manager</option>
+      <option value="staff">Staff</option>
+      <option value="viewer">Viewer</option>
+    </select>
+
+    <select
+      [(ngModel)]="filters.is_active"
+      (change)="loadUsers()"
+      class="p-3 border rounded-md bg-white"
+    >
+      <option value="">All Status</option>
+      <option value="true">Active</option>
+      <option value="false">Inactive</option>
+    </select>
+
+  </div>
+
+  <!-- Table -->
+  <div class="border rounded-lg overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-100">
+        <tr class="text-left">
+          <th class="p-3">Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Department</th>
+          <th>Status</th>
+          <th class="text-right p-3">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr 
+          *ngFor="let user of users"
+          (click)="openUserDetails(user)"
+          class="border-t hover:bg-gray-50 cursor-pointer"
+        >
+          <td class="p-3">{{ user.full_name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role }}</td>
+          <td>{{ user.department || '-' }}</td>
+          <td>
+            <span 
+              class="px-2 py-1 rounded text-white text-sm"
+              [class.bg-green-600]="user.is_active"
+              [class.bg-red-600]="!user.is_active"
+            >
+              {{ user.is_active ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+
+          <td class="p-3 text-right">
+            <button
+              (click)="toggleStatus(user, $event)"
+              class="px-3 py-1 border rounded"
+            >
+              {{ user.is_active ? 'Deactivate' : 'Activate' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+
+</div>

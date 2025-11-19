@@ -5,6 +5,7 @@ import { AppRoutes } from '../../../../core/models/app.routes.constant';
 import { InventoryService } from '../../services/inventory.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { SettingsService } from '../../../wms-settings/services/settings.service';
 
 @Component({
   selector: 'app-inventory-add',
@@ -17,6 +18,7 @@ export class InventoryAddComponent {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private settingsService = inject(SettingsService);
   private inventoryService = inject(InventoryService);
 
   inventoryForm: FormGroup;
@@ -24,10 +26,10 @@ export class InventoryAddComponent {
   isEditMode = false;
   itemId: string | null = null;
   
-  categories = ["Electronics", "Furniture", "Stationery", "Tools", "Raw Materials", "Finished Goods"];
-  units = ["pcs", "kg", "ltr", "box", "carton", "meter"];
+  categories: string[] = [];
+  units: string[] = [];
   statuses = ["active", "inactive", "discontinued"];
-  suppliers = ["Steel Corp", "ABC Supplies", "Prime Traders", "Global Co"];
+  suppliers: string[] = [];
 
   readonly AppRoutes = AppRoutes;
 
@@ -49,6 +51,9 @@ export class InventoryAddComponent {
 
   async ngOnInit() {
     this.itemId = this.route.snapshot.paramMap.get('id');
+    this.categories = await this.settingsService.get('category');
+  this.units = await this.settingsService.get('unit');
+  this.suppliers = await this.settingsService.get('supplier');
     if (this.itemId) {
       this.isEditMode = true;
       await this.loadItem();

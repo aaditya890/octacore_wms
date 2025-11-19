@@ -8,6 +8,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RoleBasedDirective } from '../../../../shared/directives/role-based.directive';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { InventoryDetailComponent } from '../inventory-detail/inventory-detail.component';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { SettingsService } from '../../../wms-settings/services/settings.service';
 
 @Component({
   selector: 'app-inventory-list',
@@ -18,9 +20,10 @@ import { InventoryDetailComponent } from '../inventory-detail/inventory-detail.c
 })
 export class InventoryListComponent {
   private dialog = inject(MatDialog);
+  private settingsService = inject(SettingsService);  
   private inventoryService = inject(InventoryService);
   private router = inject(Router);
-
+  private notificationService = inject(NotificationService);
   inventoryItems: InventoryItem[] = [];
   filteredItems: InventoryItem[] = [];
   isLoading = false;
@@ -31,10 +34,11 @@ export class InventoryListComponent {
 
   readonly AppRoutes = AppRoutes;
 
-  categories = ['Electronics', 'Furniture', 'Stationery', 'Tools', 'Raw Materials', 'Finished Goods'];
-  statuses = ['active', 'inactive', 'discontinued'];
+  categories:string[] = [];
+  statuses:string[] = ['active', 'inactive', 'discontinued'];
 
   async ngOnInit() {
+    this.categories = await this.settingsService.get('category');
     await this.loadInventory();
   }
 
@@ -106,4 +110,62 @@ export class InventoryListComponent {
       }
     }
   }
+
+async markAsRepaired(item: any, id: any) {
+  console.log("🧩 Repair clicked for:", item);
+  try {
+    // 1️⃣ Fetch all inventory items fresh
+    const allItems = await this.inventoryService.getInventoryList();
+
+    // 2️⃣ Find main (non-repairing) item with same name
+    const mainItem: any = allItems.find(
+      (i) =>
+        i.item_name.trim().toLowerCase() === item.item_name.trim().toLowerCase() &&
+        !i.is_repairing
+    );
+
+    if (mainItem) {
+      // ✅ Case 1: main item exists → merge qty + delete repairing
+      const updatedQty = (Number(mainItem.quantity) || 0) + (Number(item.quantity) || 0);
+
+      const updateMain = await this.inventoryService.updateInventory(mainItem.id, {
+        quantity: updatedQty,
+        updated_at: new Date().toISOString(),
+      });
+
+      const deleteRepair = await this.inventoryService.deleteInventory(id);
+
+      if (updateMain && deleteRepair) {
+        this.notificationService.success(
+          `"${item.item_name}" repaired ✅ — merged with main item`
+        );
+        await this.loadInventory();
+      } else {
+        this.notificationService.error("❌ Failed to merge repairing item");
+      }
+    } else {
+      // ✅ Case 2: no main item found → mark this item as normal (repair complete)
+      const updated = await this.inventoryService.updateInventory(id, {
+        is_repairing: false,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (updated) {
+        this.notificationService.success(
+          `"${item.item_name}" marked as repaired and converted to main item ✅`
+        );
+        await this.loadInventory();
+      } else {
+        this.notificationService.error("❌ Failed to update repairing item");
+      }
+    }
+  } catch (error) {
+    console.error("⚠️ Error in markAsRepaired:", error);
+    this.notificationService.error("Something went wrong ❌");
+  }
+}
+
+
+
+
 }

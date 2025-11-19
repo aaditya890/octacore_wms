@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Transaction } from '../../../../core/models/transaction.model';
 import { AppRoutes } from '../../../../core/models/app.routes.constant';
+import { SettingsService } from '../../../wms-settings/services/settings.service';
 
 @Component({
   selector: 'app-outwards-list',
@@ -18,6 +19,7 @@ import { AppRoutes } from '../../../../core/models/app.routes.constant';
 })
 export class OutwardsListComponent {
    private inoutService = inject(InoutService);
+   private settingsService = inject(SettingsService);
   private notification = inject(NotificationService);
   private inventoryService = inject(InventoryService);
   private authService = inject(AuthService);
@@ -29,11 +31,12 @@ export class OutwardsListComponent {
   selectedItemName: string = '';
   selectedItemStock: number | null = null;
   selectedItemUnit: string = '';
-  unitOptions: string[] = ['pcs', 'kg', 'ltr', 'box', 'carton', 'meter'];
+  unitOptions: string[] = [];
   currentUser: any;
   outwardForm!: FormGroup;
 
   async ngOnInit() {
+    this.unitOptions = await this.settingsService.get('unit');
     this.currentUser = this.authService.currentUser();
     this.initForm();
     await this.loadItems();

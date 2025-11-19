@@ -8,6 +8,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { AppRoutes } from '../../../../core/models/app.routes.constant';
 import { UserService } from '../../../user-management/services/user.service';
+import { SettingsService } from '../../../wms-settings/services/settings.service';
 
 @Component({
   selector: 'app-indent-create',
@@ -18,6 +19,7 @@ import { UserService } from '../../../user-management/services/user.service';
 })
 export class IndentCreateComponent implements OnInit {
   private userService = inject(UserService);
+  private settingsService = inject(SettingsService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private indentService = inject(IndentService);
@@ -25,13 +27,14 @@ export class IndentCreateComponent implements OnInit {
   private auth = inject(AuthService);
   users: any[] = [];
   managers: any[] = [];
-  units = ["pcs", "kg", "ltr", "box", "carton", "meter"];
+  units:string[] = [];
 
   form!: FormGroup;
   currentUser: any;
   isSubmitting = false;
 
   async ngOnInit() {
+    this.units = await this.settingsService.get('unit');
     this.initForm();
     this.getUser();
     await this.loadUserDropdowns();

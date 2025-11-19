@@ -31,10 +31,9 @@ export class RegisterComponent {
         full_name: ['', [Validators.required, Validators.minLength(2)]],
         email: ['', [Validators.required, Validators.email]],
         department: [''],
-        role: ['', [Validators.required]], // 👈 new control
+        role: ['', [Validators.required]],
         password: ['', [Validators.required, Validators.minLength(6)]],
         confirmPassword: ['', [Validators.required]],
-        agreeToTerms: [false, [Validators.requiredTrue]],
       },
       { validators: this.passwordMatchValidator }
     );
@@ -48,7 +47,6 @@ export class RegisterComponent {
       confirmPassword.setErrors({ passwordMismatch: true });
       return { passwordMismatch: true };
     }
-
     return null;
   }
 
@@ -58,7 +56,7 @@ export class RegisterComponent {
   get role() { return this.registerForm.get('role'); }
   get password() { return this.registerForm.get('password'); }
   get confirmPassword() { return this.registerForm.get('confirmPassword'); }
-  get agreeToTerms() { return this.registerForm.get('agreeToTerms'); }
+
 
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
@@ -80,12 +78,18 @@ export class RegisterComponent {
     const { full_name, email, password, department, role } = this.registerForm.value;
     const cleanEmail = email.trim();
 
-    const result = await this.authService.register(full_name, cleanEmail, password, department, role);
+    const result = await this.authService.register(
+      full_name,
+      cleanEmail,
+      password,
+      department,
+      role
+    );
 
     this.isLoading = false;
 
     if (result.success) {
-      this.router.navigate(['/', AppRoutes.AUTH, AppRoutes.LOGIN]);
+      this.router.navigate(['/', AppRoutes.USER_MANAGEMENT, AppRoutes.USER_MANAGEMENT]);
     } else {
       this.errorMessage = result.message || 'Registration failed. Please try again.';
     }

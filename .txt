@@ -5,17 +5,20 @@ sb inward/outwards me form validation
 pagination bcha hai invenoty or indents me 
 or bill invoice wla bhi bcha hai 
 
- 
-- inventory me raipring itme delete krne m vo ht jay badge or 
-vha mark as reapring done k option aajy to uske bad vo usme shift ho jyega 
+- add inward dropdown m -- repaiing hai to (ism) bracket me show kro 
 
 
 - add  supplier bacha hai or ye sb fileds ko db me dalna hai
-
 categories 
 suppiler
 unit
 ye sab ko db se lanaa hai
+
+
+  categories = ["Electronics", "Furniture", "Stationery", "Tools", "Raw Materials", "Finished Goods"];
+  units = ["pcs", "kg", "ltr", "box", "carton", "meter"];
+  statuses = ["active", "inactive", "discontinued"];
+  suppliers = ["Steel Corp", "ABC Supplies", "Prime Traders", "Global Co"];
 
 
 

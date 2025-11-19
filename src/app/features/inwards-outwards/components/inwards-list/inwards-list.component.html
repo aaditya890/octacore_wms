@@ -107,14 +107,17 @@
 
       <!-- Only one Supplier input -->
       <div class="md:col-span-2">
-        <label class="block text-sm font-semibold mb-1">Supplier</label>
-        <input
-          type="text"
-          formControlName="party_name"
-          placeholder="Enter supplier name"
-          class="w-full border border-gray-300 rounded-md p-2"
-          (input)="autoFillSupplier()"
-        />
+       <label class="block text-sm font-semibold mb-1">Supplier *</label>
+
+<select
+  formControlName="party_name"
+  class="w-full border border-gray-300 rounded-md p-2 cursor-pointer"
+  (change)="updateInvSupplier($event)"
+>
+  <option value="">Select Supplier</option>
+  <option *ngFor="let s of suppliers" [value]="s" class="cursor-pointer">{{ s }}</option>
+</select>
+
       </div>
 
       <div class="md:col-span-2">

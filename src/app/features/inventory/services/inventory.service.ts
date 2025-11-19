@@ -76,17 +76,26 @@ export class InventoryService {
     }
   }
 
-  async updateInventory(id: string, item: Partial<InventoryItem>): Promise<boolean> {
-    try {
-      const { error } = await this.supabaseService.from('inventory_items').update(item).eq('id', id);
-      if (error) throw error;
-      this.notificationService.success('Inventory updated successfully ✅');
-      return true;
-    } catch (error) {
-      console.error('[Inventory] Error updating item:', error);
-      return false;
-    }
+ async updateInventory(id: string, item: Partial<InventoryItem>): Promise<boolean> {
+  try {
+    const { data, error } = await this.supabaseService
+      .from('inventory_items')
+      .update(item)
+      .eq('id', id)
+      .select(); // 👈 add select() so we see updated data
+
+    if (error) throw error;
+
+    console.log('✅ Inventory Updated:', data);
+    this.notificationService.success('Inventory updated successfully ✅');
+    return true;
+  } catch (error) {
+    console.error('❌ [Inventory] Error updating item:', error);
+    this.notificationService.error('Failed to update inventory ❌');
+    return false;
   }
+}
+
 
   async deleteInventory(id: string): Promise<boolean> {
     try {

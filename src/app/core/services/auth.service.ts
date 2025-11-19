@@ -30,25 +30,34 @@ export class AuthService {
     this.userService.syncUserWithAuth();
   }
 
- private async restoreSession() {
+private async restoreSession() {
   const userStr = this.storageService.getItem("current_user");
+
   if (userStr) {
     try {
       const user = JSON.parse(userStr);
       this.currentUserSignal.set(user);
       this.isAuthenticatedSignal.set(true);
-    } catch (err) {
+    } catch {
       this.clearAuthData();
     }
   }
 
-  // 🔥 Fresh Supabase user sync
+  // 🟢 Sync fresh data
   const syncedUser = await this.userService.syncUserWithAuth();
+
+  // 🚫 Auto logout if deactivated
+  if (syncedUser && syncedUser.is_active === false) {
+    this.logout();
+    return;
+  }
+
   if (syncedUser) {
     this.storageService.setItem("current_user", JSON.stringify(syncedUser));
     this.currentUserSignal.set(syncedUser);
   }
 }
+
 
 
   private async checkAuthStatus() {
@@ -71,47 +80,40 @@ export class AuthService {
     }
   }
 
-  async login(email: string, password: string): Promise<{ success: boolean; message?: string }> {
-    try {
-      const { data, error } = await this.supabaseService.signInWithPassword(email, password);
+async login(email: string, password: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const { data, error } = await this.supabaseService.signInWithPassword(email, password);
 
-      if (error) {
-        this.notificationService.error(error.message);
-        return { success: false, message: error.message };
-      }
-
-      if (data.user && data.session) {
-        // 🟢 Step 1: First sync logged-in user with 'users' table
-        const syncedUser = await this.userService.syncUserWithAuth();
-
-        // 🟢 Step 2: Prepare final user object to store locally
-        const user: User = syncedUser || {
-          id: data.user.id,
-          email: data.user.email!,
-          full_name: data.user.user_metadata?.["full_name"] || data.user.email?.split("@")[0],
-          role: "admin",
-          department: data.user.user_metadata?.["department"] || null,
-          is_active: true,
-        };
-
-        // 🟢 Step 3: Save to storage and signal
-        this.storageService.setItem("auth_token", data.session.access_token);
-        this.storageService.setItem("current_user", JSON.stringify(user));
-        this.currentUserSignal.set(user);
-        this.isAuthenticatedSignal.set(true);
-
-        this.notificationService.success("Login successful!");
-        this.router.navigate(["/dashboard"]);
-        return { success: true };
-      }
-
-      return { success: false, message: "Login failed" };
-    } catch (error: any) {
-      console.error("Login error:", error);
-      this.notificationService.error("An error occurred during login");
+    if (error) {
       return { success: false, message: error.message };
     }
+
+    // Step 1: Login success → Now check DB
+    const dbUser = await this.userService.getUserById(data.user.id);
+
+    // 🚫 BLOCK IF INACTIVE
+    if (!dbUser || dbUser.is_active === false) {
+      await this.supabaseService.signOut();
+      return { success: false, message: "Your account is deactivated. Contact admin." };
+    }
+
+    // Step 2: Sync and save
+    const user = dbUser;
+    this.storageService.setItem("auth_token", data.session.access_token);
+    this.storageService.setItem("current_user", JSON.stringify(user));
+
+    this.currentUserSignal.set(user);
+    this.isAuthenticatedSignal.set(true);
+
+    this.router.navigate(['/dashboard']);
+    return { success: true };
+
+  } catch (err: any) {
+    return { success: false, message: err.message };
   }
+}
+
+
 
 async register(
   full_name: string,

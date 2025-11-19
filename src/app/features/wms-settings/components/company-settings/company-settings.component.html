@@ -1,1 +1,86 @@
-<p>company-settings works!</p>
+<div class="p-6 max-w-4xl mx-auto space-y-6">
+
+  <h1 class="text-2xl font-bold">Master Settings</h1>
+
+  <!-- CATEGORY PANEL -->
+  <div class="border rounded-lg shadow-sm">
+    <button 
+      class="w-full flex justify-between items-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-t-lg"
+      (click)="toggle('category')"
+    >
+      <span class="font-semibold">Categories</span>
+      <span>{{ showCategory ? '−' : '+' }}</span>
+    </button>
+
+    <div *ngIf="showCategory" class="p-4 space-y-4">
+
+      <div class="flex gap-3">
+        <input [(ngModel)]="newCategory" placeholder="New category..." class="border p-2 rounded w-full">
+        <button (click)="addCategory()" class="bg-black text-white px-5 py-2 rounded">Add</button>
+      </div>
+
+      <ul class="grid grid-cols-2 gap-2">
+        <li *ngFor="let c of categories" class="p-2 border rounded flex justify-between items-center">
+          {{ c }}
+          <button (click)="deleteItem('category', c)" class="text-red-500 font-bold">✕</button>
+        </li>
+      </ul>
+
+    </div>
+  </div>
+
+  <!-- UNITS PANEL -->
+  <div class="border rounded-lg shadow-sm">
+    <button 
+      class="w-full flex justify-between items-center px-4 py-3 bg-gray-100 hover:bg-gray-200"
+      (click)="toggle('unit')"
+    >
+      <span class="font-semibold">Units</span>
+      <span>{{ showUnit ? '−' : '+' }}</span>
+    </button>
+
+    <div *ngIf="showUnit" class="p-4 space-y-4">
+
+      <div class="flex gap-3">
+        <input [(ngModel)]="newUnit" placeholder="New unit..." class="border p-2 rounded w-full">
+        <button (click)="addUnit()" class="bg-black text-white px-5 py-2 rounded">Add</button>
+      </div>
+
+      <ul class="grid grid-cols-2 gap-2">
+        <li *ngFor="let u of units" class="p-2 border rounded flex justify-between items-center">
+          {{ u }}
+          <button (click)="deleteItem('unit', u)" class="text-red-500 font-bold">✕</button>
+        </li>
+      </ul>
+
+    </div>
+  </div>
+
+  <!-- SUPPLIERS PANEL -->
+  <div class="border rounded-lg shadow-sm">
+    <button 
+      class="w-full flex justify-between items-center px-4 py-3 bg-gray-100 hover:bg-gray-200"
+      (click)="toggle('supplier')"
+    >
+      <span class="font-semibold">Suppliers</span>
+      <span>{{ showSupplier ? '−' : '+' }}</span>
+    </button>
+
+    <div *ngIf="showSupplier" class="p-4 space-y-4">
+
+      <div class="flex gap-3">
+        <input [(ngModel)]="newSupplier" placeholder="New supplier..." class="border p-2 rounded w-full">
+        <button (click)="addSupplier()" class="bg-black text-white px-5 py-2 rounded">Add</button>
+      </div>
+
+      <ul class="grid grid-cols-2 gap-2">
+        <li *ngFor="let s of suppliers" class="p-2 border rounded flex justify-between items-center">
+          {{ s }}
+          <button (click)="deleteItem('supplier', s)" class="text-red-500 font-bold">✕</button>
+        </li>
+      </ul>
+
+    </div>
+  </div>
+
+</div>

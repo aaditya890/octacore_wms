@@ -5,7 +5,22 @@ import { UserCreateComponent } from './components/user-create/user-create.compon
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 
 export const userManagementRoutes: Routes = [
-  { path: '', component: UserListComponent },
-  { path: 'create', component: UserCreateComponent },
-  { path: 'profile/:id', component: UserProfileComponent }
+ {
+    path: '',
+    loadComponent: () =>
+      import('./components/user-list/user-list.component')
+        .then(m => m.UserListComponent)
+  },
+  {
+    path: 'create',
+    loadComponent: () =>
+      import('./components/user-create/user-create.component')
+        .then(m => m.UserCreateComponent)
+  },
+  {
+    path: 'profile/:id',
+    loadComponent: () =>
+      import('./components/user-profile/user-profile.component')
+        .then(m => m.UserProfileComponent)
+  },
 ];

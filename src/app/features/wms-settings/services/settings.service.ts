@@ -22,39 +22,77 @@ export interface Settings {
 })
 export class SettingsService {
 
-  private supabaseService = inject(SupabaseService)
-  private notificationService = inject(NotificationService)
+   private supabase = inject(SupabaseService);
+  private notify = inject(NotificationService);
 
-  async getSettings(): Promise<Settings | null> {
-    try {
-      const { data, error } = await this.supabaseService.getSettings()
+  // FETCH MASTER LIST => category / unit / supplier
+  async get(type: string): Promise<string[]> {
+    const { data, error } = await this.supabase.client
+      .from('settings')
+      .select('id, key')
+      .eq('category', type)
+      .order('key', { ascending: true });
 
-      if (error) {
-        this.notificationService.error("Failed to fetch settings")
-        throw error
-      }
-
-      return data
-    } catch (error) {
-      console.error("[v0] Error fetching settings:", error)
-      return null
+    if (error) {
+      console.log("GET ERROR:", error);
+      return [];
     }
+
+    return data.map(item => item.key);
   }
 
-  async updateSettings(settings: Partial<Settings>): Promise<boolean> {
-    try {
-      const { data, error } = await this.supabaseService.updateSettings(settings)
+  // ADD MASTER ITEM
+  async add(type: string, value: string): Promise<boolean> {
+    value = value?.trim();
+    if (!value) return false;
 
-      if (error) {
-        this.notificationService.error("Failed to update settings")
-        throw error
-      }
+    const { error } = await this.supabase.client
+      .from('settings')
+      .insert([
+        {
+          key: value,
+          category: type,
+          value: {}, // jsonb
+          updated_at: new Date().toISOString()
+        }
+      ]);
 
-      this.notificationService.success("Settings updated successfully")
-      return true
-    } catch (error) {
-      console.error("[v0] Error updating settings:", error)
-      return false
+    if (error) {
+      console.log("ADD ERROR:", error);
+      this.notify.error("Failed to add");
+      return false;
     }
+
+    this.notify.success("Added Successfully");
+    return true;
   }
+
+  // OPTIONAL DELETE FEATURE
+  async delete(id: string): Promise<boolean> {
+    const { error } = await this.supabase.client
+      .from('settings')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.log("DELETE ERROR:", error);
+      this.notify.error("Failed to delete");
+      return false;
+    }
+
+    this.notify.success("Deleted Successfully");
+    return true;
+  }
+
+  async getId(type: string, value: string) {
+  const { data } = await this.supabase.client
+    .from('settings')
+    .select('id')
+    .eq('category', type)
+    .eq('key', value)
+    .single();
+
+  return data?.id || null;
+}
+
 }
